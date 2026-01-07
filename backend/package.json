@@ -1,0 +1,28 @@
+{
+  "name": "nexus-backend",
+  "version": "1.0.0",
+  "description": "\"Backend API service for the Nexus social media platform\"",
+  "type": "module",
+  "main": "index.js",
+  "private": "true",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon ./src/index.js",
+    "start": "node ./src/index.js",
+    "lint": "eslint .",
+    "format": "prettier --write ."
+  },
+  "author": "Kunal Halder",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.2",
+    "eslint": "^9.39.2",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.0.0",
+    "nodemon": "^3.1.11",
+    "prettier": "^3.7.4"
+  }
+}
