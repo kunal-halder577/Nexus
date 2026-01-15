@@ -54,6 +54,10 @@ const userSchema = new Schema(
       type: Boolean,
       default: false,
     },
+    isOnboarded: { 
+      type: Boolean, 
+      default: false 
+    },
     emailVerified: {
       type: Boolean,
       default: false,
@@ -119,10 +123,15 @@ userSchema.pre('validate', async function () {
 });
 userSchema.pre('save', async function () {
   const password = this.providers?.local?.password;
+  const refreshToken = this.refreshToken;
 
   if (password && this.isModified('providers.local.password')) {
     const salt = await bcrypt.genSalt();
     this.providers.local.password = await bcrypt.hash(password, salt);
+  }
+  if(refreshToken && this.isModified('refreshToken')) {
+    const salt = await bcrypt.genSalt();
+    this.refreshToken = await bcrypt.hash(refreshToken, salt);
   }
 });
 userSchema.set('toJSON', {

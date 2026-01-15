@@ -4,81 +4,78 @@ import ApiError from '../utils/ApiError.js';
 import { nodeEnv } from '../constants.js';
 import ApiResponse from '../utils/ApiResponse.js';
 import asyncHandler from '../utils/asyncHandler.js';
-import { uploadImageOnCloud } from '../utils/cloudinary.js';
 
 export const register = asyncHandler(async (req, res) => {
-  const { username, email, password, name, age, gender } = req.body;
-  const allowedGenders = ['male', 'female', 'others'];
-  const normalizedUsername = username.toLowerCase();
-  const normalizedEmail = email.toLowerCase();
+  const { username, email, password, confirmPassword } = req.body;
+
+  if (!username) throw new ApiError(422, "Username is required.");
+  if (!email) throw new ApiError(422, "Email is required.");
+  if (!password) throw new ApiError(422, "Password is required.");
+  if (!confirmPassword) throw new ApiError(422, "Confirm password is required.");
+  if (password !== confirmPassword) {
+    throw new ApiError(409, "Password and Confirm Password must be same.");
+  }
   
-  if (!username) {
-    throw new ApiError(422, 'Username is required.');
+  const normalizedUsername = username.toLowerCase().trim();
+  const normalizedEmail = email.toLowerCase().trim();
+
+  if(!/^[a-z0-9_]{3,20}$/.test(normalizedUsername)) {
+    throw new ApiError(422, "Invalid username.");
   }
-  if (!email) {
-    throw new ApiError(422, 'Email is required');
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+    throw new ApiError(422, "Invalid email.");
   }
-  if (!password) {
-    throw new ApiError(422, 'Password is required.');
-  }
-  if (password.length < 8) {
-    throw new ApiError(422, 'Password must be at least 8 characters.');
-  }
-  if (gender && !allowedGenders.includes(gender)) {
-    throw new ApiError(400, 'wrong gender is provided.');
+  if(!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/.test(password)) {
+    throw new ApiError(422, "Invalid password.");
   }
 
   const existingUser = await User.findOne({
     $or: [{ username: normalizedUsername }, { email: normalizedEmail }],
   });
 
-  if (existingUser) {
-    throw new ApiError(409, 'user already exist.');
-  }
-  
-  const avatarLocalPath = req.files?.['avatar']?.[0].path;
-
-  const { 
-    url: avatarCloudPath, 
-    publicId: avatarPublicId 
-  } = avatarLocalPath? 
-    await uploadImageOnCloud(avatarLocalPath, 'avatar', 'avatar') 
-    : {url: undefined, publicId: undefined};
-  
-  if(avatarLocalPath && !avatarCloudPath) {
-    throw new ApiError(500, 'Failed to upload image on cloud.');
-  }
+  if (existingUser) throw new ApiError(409, "User already exists.");
 
   let user;
-
   try {
     user = await User.create({
-      gender,
-      age: age ?? 18,
-      name: name ?? '',
       email: normalizedEmail,
       username: normalizedUsername,
-      avatarUrl: avatarCloudPath || "",
       providers: { local: { password } },
-      avatarPublicId: avatarPublicId || "",
-      lastLoginAt: new Date(),
-      passwordChangedAt: new Date(),
-      lastLoginIp: req.ip || req.headers['x-forwarded-for'],
     });
   } catch (error) {
-    if (error.code === 11000) {
-      throw new ApiError(409, 'User already exist.');
-    }
+    if (error.code === 11000) throw new ApiError(409, "User already exists.");
     throw error;
   }
 
-  const createdUser = await User.findById(user._id);
+  const accessToken = user.generateAccessToken();
+  const refreshToken = user.generateRefreshToken();
 
-  if (!createdUser) {
-    throw new ApiError(500, 'Something went wrong while fetching user data.');
+  user.refreshToken = refreshToken;
+  await user.save();
+
+  const createdUser = await User.findById(user._id).select(
+    "_id username email createdAt isOnboarded"
+  );
+
+  const baseCookieOptions = {
+    httpOnly: true,
+    secure: nodeEnv === 'production',
+    sameSite: 'lax',
+  }
+  const accessTokenCookieOptions = {
+    ...baseCookieOptions,
+    maxAge: 3 * 60 * 60 * 1000, 
+  }
+  const refreshTokenCookieOptions = {
+    ...baseCookieOptions,
+    maxAge: 7 * 24 * 60 * 60 * 1000,
   }
 
-  return res.status(201).json(new ApiResponse(201, 'User registered successfully', createdUser));
+  return res
+    .status(201)
+    .cookie("accessToken", accessToken, accessTokenCookieOptions)
+    .cookie("refreshToken", refreshToken, refreshTokenCookieOptions)
+    .json(new ApiResponse(201, "User registered successfully", createdUser));
 });
 export const login = asyncHandler(async (req, res) => {
   let { username, email, password } = req.body;
