@@ -1,9 +1,10 @@
 import bcrypt from "bcrypt";
 import User from '../models/user.model.js';
 import ApiError from '../utils/ApiError.js';
-import { nodeEnv } from '../constants.js';
+import { accessTokenExpiry, accessTokenSecretKey, nodeEnv, refreshTokenSecretKey } from '../constants.js';
 import ApiResponse from '../utils/ApiResponse.js';
 import asyncHandler from '../utils/asyncHandler.js';
+import jwt from "jsonwebtoken";
 
 export const register = asyncHandler(async (req, res) => {
   const { username, email, password, confirmPassword } = req.body;
@@ -22,7 +23,7 @@ export const register = asyncHandler(async (req, res) => {
   if(!/^[a-z0-9_]{3,20}$/.test(normalizedUsername)) {
     throw new ApiError(422, "Invalid username.");
   }
-  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
     throw new ApiError(422, "Invalid email.");
   }
   if(!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/.test(password)) {
@@ -57,15 +58,17 @@ export const register = asyncHandler(async (req, res) => {
     "_id username email createdAt isOnboarded"
   );
 
+  const response = {
+    user: createdUser.toObject(),
+    accessToken
+  };
+
   const baseCookieOptions = {
     httpOnly: true,
     secure: nodeEnv === 'production',
     sameSite: 'lax',
-  }
-  const accessTokenCookieOptions = {
-    ...baseCookieOptions,
-    maxAge: 3 * 60 * 60 * 1000, 
-  }
+  };
+
   const refreshTokenCookieOptions = {
     ...baseCookieOptions,
     maxAge: 7 * 24 * 60 * 60 * 1000,
@@ -73,9 +76,9 @@ export const register = asyncHandler(async (req, res) => {
 
   return res
     .status(201)
-    .cookie("accessToken", accessToken, accessTokenCookieOptions)
     .cookie("refreshToken", refreshToken, refreshTokenCookieOptions)
-    .json(new ApiResponse(201, "User registered successfully", createdUser));
+    .json(new ApiResponse(201, "User registered successfully", response));
+
 });
 export const login = asyncHandler(async (req, res) => {
   let { username, email, password } = req.body;
@@ -118,28 +121,36 @@ export const login = asyncHandler(async (req, res) => {
   
   await user.save();
 
-  const responseUser = {
-    _id: user._id,
-    age: user.age,
-    name: user.name,
-    email: user.email,
-    gender: user.gender,
-    username: user.username,
-    avatarUrl: user.avatarUrl,
-    createdAt: user.createdAt,
+  const response = {
+    user: {
+      _id: user._id,
+      age: user.age,
+      name: user.name,
+      email: user.email,
+      gender: user.gender,
+      username: user.username,
+      avatarUrl: user.avatarUrl,
+      createdAt: user.createdAt,
+    },
+    accessToken
   }
   
-  const cookieOptions = {
+   const baseCookieOptions = {
     httpOnly: true,
     secure: nodeEnv === 'production',
-    sameSite: 'strict',
+    sameSite: 'lax',
+  }
+
+  const refreshTokenCookieOptions = {
+    ...baseCookieOptions,
+    maxAge: 7 * 24 * 60 * 60 * 1000,
   }
 
   res
   .status(200)
-  .cookie('accessToken', accessToken, cookieOptions)
-  .cookie('refreshToken', refreshToken, cookieOptions)
-  .json(new ApiResponse(200, 'user logged in successfully.', responseUser))
+  .cookie('refreshToken', refreshToken, refreshTokenCookieOptions)
+  .json(new ApiResponse(200, 'user logged in successfully.', response));
+  
 });
 export const logout = asyncHandler(async (req, res) => {
   await User.updateOne(
@@ -147,16 +158,20 @@ export const logout = asyncHandler(async (req, res) => {
     { $unset: { refreshToken: 1} },
   )
   
-  const cookieOptions = {
+   const baseCookieOptions = {
     httpOnly: true,
     secure: nodeEnv === 'production',
-    sameSite: 'strict'
-  };
+    sameSite: 'lax',
+  }
+
+  const refreshTokenCookieOptions = {
+    ...baseCookieOptions,
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  }
 
   return res
   .status(200)
-  .clearCookie("accessToken", cookieOptions)
-  .clearCookie("refreshToken", cookieOptions)
+  .clearCookie("refreshToken", refreshTokenCookieOptions)
   .json(new ApiResponse(200, 'user logged out successfully.', {}));
 });
 export const refreshAccessToken = asyncHandler(async (req, res) => {
@@ -166,16 +181,120 @@ export const refreshAccessToken = asyncHandler(async (req, res) => {
   req.user.refreshToken = refreshToken;
   await req.user.save();
 
-  const cookieOptions = {
+   const baseCookieOptions = {
     httpOnly: true,
     secure: nodeEnv === 'production',
-    sameSite: 'strict',
+    sameSite: 'lax',
   }
+
+  const refreshTokenCookieOptions = {
+    ...baseCookieOptions,
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  };
+  const response = {
+    accessToken,
+  };
+
   return res
   .status(200)
-  .cookie("accessToken", accessToken, cookieOptions)
-  .cookie("refreshToken", refreshToken, cookieOptions)
-  .json(new ApiResponse(200, 'Tokens refreshed successfully.', {}));
+  .cookie("refreshToken", refreshToken, refreshTokenCookieOptions)
+  .json(new ApiResponse(200, 'Tokens refreshed successfully.', response));
+
+});
+export const getMe = asyncHandler(async (req, res) => {
+  const authHeader = req.headers.authorization;
+  const accessToken =
+    req.cookies?.accessToken ||
+    (authHeader?.startsWith("Bearer ") && authHeader.split(" ")[1]);
+
+  const refreshToken = req.cookies?.refreshToken;
+
+  if (!accessToken && !refreshToken) {
+    throw new ApiError(401, "Unauthorized request.");
+  }
+
+  // 1) Try access token first
+  if (accessToken) {
+    try {
+      const decoded = jwt.verify(accessToken, accessTokenSecretKey);
+
+      const user = await User.findById(decoded._id).select(
+        "_id username email role name isActive isBlocked"
+      );
+
+      if (!user) throw new ApiError(404, "User not found.");
+      if (!user.isActive || user.isBlocked) throw new ApiError(403, "Account is disabled.");
+
+      const response = {
+        user,
+        accessToken,
+      };
+      return res
+      .status(200)
+      .json(new ApiResponse(200, "User fetched successfully.", response));
+    } catch (err) {
+      // access token invalid/expired → fallback to refresh token
+    }
+  }
+
+  // 2) Fallback to refresh token
+  if (!refreshToken) {
+    throw new ApiError(401, "Session expired. Please login again.");
+  }
+
+  let decodedRefresh;
+  try {
+    decodedRefresh = jwt.verify(refreshToken, refreshTokenSecretKey);
+  } catch (error) {
+    throw new ApiError(401, error.message || "Invalid refresh token.");
+  }
+
+  const user = await User.findById(decodedRefresh._id).select(
+    "_id username email role name isActive isBlocked refreshToken"
+  );
+
+  if (!user) throw new ApiError(404, "User not found.");
+  if (!user.isActive || user.isBlocked) throw new ApiError(403, "Account is disabled.");
+  if (!user.refreshToken) throw new ApiError(401, "Session expired. Please login again.");
+
+  const isRefreshTokenSame = await bcrypt.compare(refreshToken, user.refreshToken);
+
+  if (!isRefreshTokenSame) {
+    user.refreshToken = undefined;
+    await user.save({ validateBeforeSave: false });
+
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      secure: nodeEnv === "production",
+      sameSite: "lax",
+    });
+
+    throw new ApiError(401, "Refresh token revoked.");
+  }
+
+  // 3) Issue new access token
+  const newAccessToken = jwt.sign(
+    { _id: user._id },
+    accessTokenSecretKey,
+    { expiresIn: accessTokenExpiry }
+  );
+
+  const safeUser = {
+    _id: user._id,
+    username: user.username,
+    email: user.email,
+    role: user.role,
+    name: user.name,
+    isActive: user.isActive,
+    isBlocked: user.isBlocked,
+  };
+
+  const response = { user: safeUser, accessToken: newAccessToken };
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, "User fetched successfully.", response));
+
 });
 export const changePassword = asyncHandler(async (req, res) => {
   const { oldPassword, newPassword, confirmPassword } = req.body;
@@ -217,4 +336,4 @@ export const changePassword = asyncHandler(async (req, res) => {
   return res
   .status(200)
   .json(new ApiResponse(200, 'Password updated successfully.', {}));
-})
+});

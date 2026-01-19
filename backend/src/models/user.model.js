@@ -24,7 +24,7 @@ const userSchema = new Schema(
       required: true,
       lowercase: true,
       trim: true,
-      match: [/^[a-z0-9_]+$/, 'Invalid username'],
+      match: [/^[a-z0-9_]{3,20}$/, "Invalid username"],
     },
     name: {
       type: String,
@@ -81,11 +81,10 @@ const userSchema = new Schema(
           select: false,
           validate: {
             validator: function (v) {
-              return /(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(v);
+              return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/.test(v);
             },
-            message: 'Password is too weak',
+            message: "Password is too weak",
           },
-          minLength: 8,
         },
       },
     },

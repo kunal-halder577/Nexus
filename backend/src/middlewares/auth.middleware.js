@@ -1,7 +1,7 @@
-import { accessTokenSecretKey, refreshTokenSecretKey } from "../constants";
-import User from "../models/user.model";
-import ApiError from "../utils/ApiError";
-import asyncHandler from "../utils/asyncHandler";
+import { accessTokenSecretKey, allowedOrigins, refreshTokenSecretKey } from "../constants.js";
+import User from "../models/user.model.js";
+import ApiError from "../utils/ApiError.js";
+import asyncHandler from "../utils/asyncHandler.js";
 import jwt from "jsonwebtoken"
 import bcrypt from "bcrypt"
 
@@ -13,7 +13,7 @@ export const authCheck = asyncHandler(async(req, _, next) => {
     if(!accessToken) {
         throw new ApiError(401, 'unauthorized request.');
     }
-    if (!refreshTokenSecretKey) {
+    if (!accessTokenSecretKey) {
         throw new Error('JWT secrets are not defined');
     }
 
@@ -39,7 +39,11 @@ export const authCheck = asyncHandler(async(req, _, next) => {
 });
 export const verifyRefreshToken = asyncHandler(async (req, res, next) => {
   const incomingRefreshToken = req.cookies?.refreshToken;
-
+  const origin = req.headers.origin;
+  
+  if (origin !== allowedOrigins) {
+    throw new ApiError(403, "CSRF blocked");
+  }
   if (!incomingRefreshToken) {
     throw new ApiError(401, "Refresh token is required.");
   }
@@ -86,7 +90,6 @@ export const verifyRefreshToken = asyncHandler(async (req, res, next) => {
       sameSite: "lax",
     };
 
-    res.clearCookie("accessToken", cookieOptions);
     res.clearCookie("refreshToken", cookieOptions);
 
     throw new ApiError(401, "Refresh token revoked.");

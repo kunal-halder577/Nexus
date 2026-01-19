@@ -6,3 +6,4 @@ export const accessTokenSecretKey = process.env.ACCESS_TOKEN_SECRET_KEY;
 export const accessTokenExpiry = process.env.ACCESS_TOKEN_EXPIRY;
 export const refreshTokenSecretKey = process.env.REFRESH_TOKEN_SECRET_KEY;
 export const refreshTokenExpiry = process.env.REFRESH_TOKEN_EXPIRY;
+export const allowedOrigins = ["http://localhost:5173"];
