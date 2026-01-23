@@ -144,6 +144,7 @@ userSchema.set('toJSON', {
       username: ret.username,
       avatarUrl: ret.avatarUrl,
       avatarPublicId: ret.avatarPublicId,
+      isOnboarded: ret.isOnboarded,
       createdAt: ret.createdAt,
     };
   },

@@ -130,6 +130,8 @@ export const login = asyncHandler(async (req, res) => {
       gender: user.gender,
       username: user.username,
       avatarUrl: user.avatarUrl,
+      isOnboarded: user.isOnboarded,
+      avatarPublicId: user.avatarPublicId,
       createdAt: user.createdAt,
     },
     accessToken
@@ -219,7 +221,7 @@ export const getMe = asyncHandler(async (req, res) => {
       const decoded = jwt.verify(accessToken, accessTokenSecretKey);
 
       const user = await User.findById(decoded._id).select(
-        "_id username email role name isActive isBlocked"
+        "_id username email role name isActive isBlocked avatarUrl avatarPublicId isOnboarded"
       );
 
       if (!user) throw new ApiError(404, "User not found.");
@@ -250,7 +252,7 @@ export const getMe = asyncHandler(async (req, res) => {
   }
 
   const user = await User.findById(decodedRefresh._id).select(
-    "_id username email role name isActive isBlocked refreshToken"
+    "_id username email avatarUrl avatarPublicId isOnboarded role name isActive isBlocked refreshToken"
   );
 
   if (!user) throw new ApiError(404, "User not found.");
@@ -287,6 +289,9 @@ export const getMe = asyncHandler(async (req, res) => {
     name: user.name,
     isActive: user.isActive,
     isBlocked: user.isBlocked,
+    avatarUrl: user.avatarUrl,
+    avatarPublicId: user.avatarPublicId,
+    isOnboarded: user.isOnboarded,
   };
 
   const response = { user: safeUser, accessToken: newAccessToken };
