@@ -3,6 +3,7 @@ import { Bell } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { ProfileDropdown } from "./ProfileDropdown.jsx";
 
 const Header = () => {
   // 1. STATE: Track scroll direction for "Smart Visibility"
@@ -82,10 +83,7 @@ const Header = () => {
           </Button>
 
           {/* Profile Avatar */}
-          <Avatar className="h-8 w-8 cursor-pointer border border-border/50 transition-all hover:ring-2 hover:ring-ring hover:ring-offset-1">
-            <AvatarImage src="https://github.com/shadcn.png" alt="@user" />
-            <AvatarFallback>NX</AvatarFallback>
-          </Avatar>
+          <ProfileDropdown />
         </div>
       </div>
     </header>

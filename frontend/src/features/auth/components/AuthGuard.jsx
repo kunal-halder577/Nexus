@@ -1,21 +1,24 @@
-import { useEffect } from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, Navigate } from "react-router-dom";
 import { useGetMeQuery } from "../api/authApi";
-import useAuthStore from "@/stores/auth.store";
+import { useSelector } from "react-redux";
+import { selectIsAuthenticated, selectCurrentToken } from "../authSlice.js"; 
 
 const AuthGuard = () => {
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  const setAuth = useAuthStore((s) => s.setAuth);
+  const isAuthenticated = useSelector(selectIsAuthenticated);
+  const token = useSelector(selectCurrentToken);
 
-  const { data, isSuccess } = useGetMeQuery(undefined, {
-    skip: isAuthenticated, // ✅ stop calling once auth is set
+  // Skip if logged out OR if we already have a session
+  const shouldSkip = !isAuthenticated || !!token;
+
+  // Checks the session with the backend if we don't have user data yet
+  const { isError } = useGetMeQuery(undefined, {
+    skip: shouldSkip, 
   });
 
-  useEffect(() => {
-    if (isSuccess && !isAuthenticated) {
-      setAuth(data?.data?.accessToken);
-    }
-  }, [isSuccess, isAuthenticated, setAuth, data]);
+  // If absolutely not authenticated, boot to login
+  if (!isAuthenticated) {
+      return <Navigate to="/login" replace />;
+  }
 
   return <Outlet />;
 };
