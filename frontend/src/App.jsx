@@ -1,13 +1,9 @@
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
+import AppLayout from '@/components/Layout/AppLayout';
 
 function App() {
- 
   return (
     <>
-      <Button>
-        Kunal
-      </Button>
+      <AppLayout />
     </>
   );
 }
