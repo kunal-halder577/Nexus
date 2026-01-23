@@ -64,10 +64,7 @@ const dataSchema = z.object({
 const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [register, { error }] = useRegisterMutation();
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  const setAuth = useAuthStore((s) => s.setAuth);
-  const logout = useAuthStore((s) => s.logout);
+  const [register] = useRegisterMutation();
   const navigate = useNavigate();
 
   // Initialize Form
@@ -85,11 +82,9 @@ const Register = () => {
   const onSubmit = async (data) => {
     try {
       const response = await register(data).unwrap();
-      setAuth(response.data.accessToken);
-      navigate('/');
+      navigate('/onboarding', { replace: true });
       console.log("API Response:", response.data);
     } catch (err) {
-      logout();
       console.error("Registration Error:", err);
     }
   };

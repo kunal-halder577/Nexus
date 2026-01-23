@@ -35,10 +35,8 @@ const dataSchema = z.object({
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const [login, { error }] = useLoginMutation();
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  const setAuth = useAuthStore((s) => s.setAuth);
-  const logout = useAuthStore((s) => s.logout);
+  const [login] = useLoginMutation();
+  
   const navigate = useNavigate();
 
   const form = useForm({
@@ -58,11 +56,14 @@ const Login = () => {
     }
     try {
       const response = await login(dataBody).unwrap();
-      setAuth(response.data.accessToken);
-      navigate('/');
+      const isOnboarded = response.data?.isOnboarded;
+      if(!isOnboarded) {
+        navigate('/onboarding', { replace: true })
+      } else {
+        navigate('/', { replace: true })
+      }
       console.log("API Response:", response.data);
     } catch (err) {
-      logout();
       console.error("Login:", err);
     }
   };
