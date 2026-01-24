@@ -28,10 +28,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Separator } from "@/components/ui/separator";
-import { useGetMeQuery, useRegisterMutation } from "@/features/auth/api/authApi.js";
-import useAuthStore from "@/stores/auth.store.js";
-import { Link, Navigate, useNavigate } from "react-router-dom";
-import Loader from "@/components/Loader";
+import { useRegisterMutation } from "@/features/auth/api/authApi.js";
+import { Link, useNavigate } from "react-router-dom";
 
 // Schema definition (Zod works the same in JS and TS)
 const dataSchema = z.object({
@@ -260,22 +258,4 @@ const Register = () => {
   );
 };
 
-const RegisterPage = () => {
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  const {isError, isLoading} = useGetMeQuery(undefined, {
-    skip: !isAuthenticated
-  });
-  
-  if(!isAuthenticated || isError) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Register />
-      </div>
-    )
-  }
-  if(isLoading) {
-    return <Loader />
-  }
-  return <Navigate to={'/'} />
-}
-export default RegisterPage;
+export default Register;

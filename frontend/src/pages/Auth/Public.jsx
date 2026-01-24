@@ -8,9 +8,8 @@ import {
 } from "@/features/auth/authSlice";
 import { useThemeEffect } from "@/components/theme";
 
-const ProtectedRoute = () => {
+const PublicRoute = () => {
   useThemeEffect();
-
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const user = useSelector(selectCurrentUser);
 
@@ -18,15 +17,27 @@ const ProtectedRoute = () => {
     skip: !isAuthenticated,
   });
 
-  if (!isAuthenticated) return <Navigate to="/login" replace />;
-  if (isLoading || isFetching) return <Loader />;
+  // If not logged in -> allow login/register
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center">
+        <Outlet />
+      </div>
+    );
+  }
 
-  // If user exists and not onboarded -> force onboarding
+  // Logged in but user data is loading -> show loader
+  if (isLoading || isFetching) {
+    return <Loader />;
+  }
+
+  // Logged in but not onboarded -> onboarding only
   if (user && !user.isOnboarded) {
     return <Navigate to="/onboarding" replace />;
   }
 
-  return <Outlet />;
+  // Logged in and onboarded -> go home
+  return <Navigate to="/" replace />;
 };
 
-export default ProtectedRoute;
+export default PublicRoute;

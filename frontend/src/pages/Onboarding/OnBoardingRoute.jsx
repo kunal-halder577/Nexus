@@ -1,16 +1,15 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { useSelector } from "react-redux";
 import Loader from "@/components/Loader.jsx";
-import { useGetMeQuery } from "@/features/auth/api/authApi";
+import { useGetMeQuery } from "@/features/auth/api/authApi.js";
 import {
   selectIsAuthenticated,
   selectCurrentUser,
-} from "@/features/auth/authSlice";
+} from "@/features/auth/authSlice.js";
 import { useThemeEffect } from "@/components/theme";
 
-const ProtectedRoute = () => {
+const OnboardingRoute = () => {
   useThemeEffect();
-
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const user = useSelector(selectCurrentUser);
 
@@ -21,12 +20,10 @@ const ProtectedRoute = () => {
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   if (isLoading || isFetching) return <Loader />;
 
-  // If user exists and not onboarded -> force onboarding
-  if (user && !user.isOnboarded) {
-    return <Navigate to="/onboarding" replace />;
-  }
+  // If already onboarded -> go home
+  if (user?.isOnboarded) return <Navigate to="/" replace />;
 
   return <Outlet />;
 };
 
-export default ProtectedRoute;
+export default OnboardingRoute;

@@ -28,7 +28,7 @@ const step3Schema = z.object({
   interests: z.array(z.string()).min(3, "Please select at least 3 interests"),
 });
 
-function Onboarding() {
+export default function Onboarding() {
   const { setTheme } = useUiStore();
   const [ onboarding, { isLoading, isSuccess, data } ] = useOnboardingMutation();
   const navigate = useNavigate();
@@ -254,15 +254,3 @@ function Onboarding() {
     </div>
   );
 };
-export default function OnboardingContainer() {
-  const user = useSelector(selectCurrentUser);
-  const { isLoading } = useGetMeQuery();
-
-  if(isLoading) {
-    return <Loader />
-  }
-  if(user?.isOnboarded) {
-    return <Navigate to={'/'} replace/>
-  }
-  return <Onboarding />
-}

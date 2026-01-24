@@ -59,9 +59,15 @@ export const ProfileDropdown = () => {
       
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel>
-          <div className="flex flex-col">
-            <span>{user?.name || 'Name'}</span>
-            <span>{'@'+user?.username || '@username'}</span>
+          <div className="flex items-center gap-2">
+             <Avatar className="h-8 w-8 cursor-pointer border border-border/50 transition-all hover:ring-2 hover:ring-ring hover:ring-offset-1">
+                <AvatarImage src={user?.avatarUrl} alt="@user" />
+                <AvatarFallback>{user?.name?.charAt(0) ||'U'}</AvatarFallback>
+            </Avatar>
+            <div className="flex flex-col">
+              <span>{user?.name || 'Name'}</span>
+              <span>{'@'+user?.username || '@username'}</span>
+            </div>
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />

@@ -191,22 +191,5 @@ const Login = () => {
     </Card>
   )
 }
-const LoginPage = () => {
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  const {isError, isLoading} = useGetMeQuery(undefined, {
-    skip: !isAuthenticated
-  });
 
-  if(!isAuthenticated || isError) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Login />
-      </div>
-    )
-  }
-  if(isLoading) {
-    return <Loader />
-  }
-  return <Navigate to={'/'} />
-}
-export default LoginPage;
+export default Login;
