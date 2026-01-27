@@ -9,6 +9,7 @@ import OnboardingRoute from "@/pages/Onboarding/OnBoardingRoute.jsx";
 import AppLayout from "@/components/Layout/AppLayout.jsx";
 import App from "@/App";
 import PublicRoute from "@/pages/Auth/Public";
+import Home from "@/pages/Home/Home";
 
 const router = createBrowserRouter([
   // Authenticaion
@@ -47,7 +48,12 @@ const router = createBrowserRouter([
           { 
             path: "/", 
             element: <AppLayout />,
-            children: []
+            children: [
+              {
+                index: true,
+                element: <Home />
+              },
+            ]
           }
         ],
       },
