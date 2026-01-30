@@ -17,6 +17,14 @@ export const userApi = baseApi.injectEndpoints({
       }),
       providesTags: ['User'],
     }),
+    updateUserProfile: builder.mutation({
+      query: (data) => ({
+        url: '/users/me',
+        method: 'PATCH',
+        body: data
+      }),
+      invalidatesTags: ['User'],
+    }),
   }),
   overrideExisting: false,
 });
@@ -24,4 +32,5 @@ export const userApi = baseApi.injectEndpoints({
 export const {
   useOnboardingMutation,
   useGetUserProfileQuery,
+  useUpdateUserProfileMutation,
 } = userApi;

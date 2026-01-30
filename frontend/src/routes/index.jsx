@@ -10,6 +10,8 @@ import AppLayout from "@/components/Layout/AppLayout.jsx";
 import App from "@/App";
 import PublicRoute from "@/pages/Auth/Public";
 import Home from "@/pages/Home/Home";
+import ProfilePage from "@/pages/Profile/MyProfile";
+import ProfileEditPage from "@/pages/Profile/ProfileEdit";
 
 const router = createBrowserRouter([
   // Authenticaion
@@ -53,6 +55,14 @@ const router = createBrowserRouter([
                 index: true,
                 element: <Home />
               },
+              {
+                path: "profile/me",
+                element: <ProfilePage />
+              },
+              {
+                path: "profile/update/me",
+                element: <ProfileEditPage />
+              }
             ]
           }
         ],

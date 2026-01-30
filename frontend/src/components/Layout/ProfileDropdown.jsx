@@ -25,7 +25,7 @@ import {
   DropdownMenuPortal,
 } from "@/components/ui/dropdown-menu";
 
-export const ProfileDropdown = () => {
+export const ProfileDropdown = ({ className }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const user = useSelector(selectCurrentUser);
@@ -51,7 +51,7 @@ export const ProfileDropdown = () => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Avatar className="h-8 w-8 cursor-pointer border border-border/50 transition-all hover:ring-2 hover:ring-ring hover:ring-offset-1">
+        <Avatar className={`h-8 w-8 cursor-pointer border border-border/50 transition-all hover:ring-2 hover:ring-ring hover:ring-offset-1 ${className}`}>
           <AvatarImage src={user?.avatarUrl} alt="@user" />
           <AvatarFallback>{user?.name?.charAt(0) ||'U'}</AvatarFallback>
         </Avatar>

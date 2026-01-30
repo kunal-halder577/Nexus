@@ -14,18 +14,20 @@ import {
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { ProfileDropdown } from './ProfileDropdown';
-import { Link } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { selectCurrentUser } from '@/features/auth/authSlice';
 
 const LeftSidebar = () => {
   const { state } = useSidebar(); // Access sidebar state (expanded vs collapsed)
-
+  const user = useSelector(selectCurrentUser);
   const navItems = [
-    { icon: Home, label: "Home", active: true },
-    { icon: Compass, label: "Explore" },
-    { icon: Bell, label: "Notifications" },
-    { icon: Mail, label: "Messages" },
-    { icon: Bookmark, label: "Bookmarks" },
-    { icon: User, label: "Profile" },
+    { icon: Home, label: "Home", path: '/' },
+    { icon: Compass, label: "Explore", path: '/explore' },
+    { icon: Bell, label: "Notifications", path: '/notifications' },
+    { icon: Mail, label: "Messages", path: '/messages' },
+    { icon: Bookmark, label: "Bookmarks", path: '/bookmarks' },
+    { icon: User, label: "Profile", path: '/profile/me' },
   ];
 
   return (
@@ -54,14 +56,15 @@ const LeftSidebar = () => {
                 <SidebarMenuItem key={item.label}>
                   <SidebarMenuButton 
                     asChild 
-                    size="lg" 
-                    className={`h-12 text-lg transition-all ${item.active ? "font-extrabold" : "font-medium"}`}
                     tooltip={item.label}
                   >
-                    <Link to={'/'}>
+                    <NavLink 
+                      to={item.path}
+                      className={`h-12 text-lg font-medium transition-all aria-[current=page]:font-extrabold`}
+                    >
                       <item.icon className="!size-6" />
                       <span>{item.label}</span>
-                    </Link>
+                    </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
@@ -85,10 +88,16 @@ const LeftSidebar = () => {
       </SidebarContent>
 
       {/* --- PROFILE DROPDOWN --- */}
-      <SidebarFooter className="p-2 pb-4">
+      <SidebarFooter className="p-4 font-medium text-sm">
         <SidebarMenu>
           <SidebarMenuItem>
-           <ProfileDropdown />
+            <div className='flex items-center gap-3'>
+              <ProfileDropdown className={'h-10 w-10'}/>
+              <div className='flex flex-col'>
+                <span>{user?.name || 'Name'}</span>
+                <span>{`@${user?.username}` || '@username'}</span>
+              </div>
+            </div>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
