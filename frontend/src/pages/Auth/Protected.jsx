@@ -19,7 +19,7 @@ const ProtectedRoute = () => {
   });
 
   if (!isAuthenticated) return <Navigate to="/login" replace />;
-  if (isLoading || isFetching) return <Loader />;
+  if ((isLoading || isFetching) && !user) return <Loader />;
 
   // If user exists and not onboarded -> force onboarding
   if (user && !user.isOnboarded) {

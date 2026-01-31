@@ -41,12 +41,15 @@ const profileFormSchema = z.object({
     .string()
     .max(160)
     .optional(),
-  age: z.coerce
+  age: z.preprocess(
+    (val) => (val === ""? undefined : val),
+    z.coerce
     .number()
     .min(13, "You must be at least 13.")
     .max(120)
     .optional(),
-  gender: z.enum(["male", "female", "other"], {
+  ),
+  gender: z.enum(["male", "female", "others"], {
     required_error: "Please select a gender.",
   })
     .optional()
@@ -100,21 +103,22 @@ export default function UpdateProfilePage({
   // Now, the form ONLY resets when the actual user data from the DB changes.
   useEffect(() => {
     if (user) {
-      form.reset({
+      const clearUser = {
         name: user.name || "",
         username: user.username || "",
         bio: user.bio || "",
-        age: user.age || "",
-        gender: user.gender || "prefer-not-to-say",
+        age: user.age? String(user.age) : "",
+        gender: user.gender || "",
         location: user.location || "",
         website: user.website || "",
-      });
+      };
+      form.reset(clearUser);
       // Only set the preview to the user's url if we haven't selected a new file yet
       if (!selectedFile) {
         setImagePreview(user.avatarUrl || "");
       }
     }
-  }, [user, form]); // <--- 'selectedFile' removed here
+  }, [user, form]);
 
   // ==========================
   // HANDLER 1: Avatar Upload
@@ -353,7 +357,10 @@ export default function UpdateProfilePage({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Gender</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value} value={field.value}>
+                        <Select 
+                          onValueChange={field.onChange} 
+                          value={field.value}
+                        >
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue placeholder="Select gender" />
@@ -362,8 +369,7 @@ export default function UpdateProfilePage({
                           <SelectContent>
                             <SelectItem value="male">Male</SelectItem>
                             <SelectItem value="female">Female</SelectItem>
-                            <SelectItem value="other">Other</SelectItem>
-                            <SelectItem value="prefer-not-to-say">Prefer not to say</SelectItem>
+                            <SelectItem value="others">Others</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />

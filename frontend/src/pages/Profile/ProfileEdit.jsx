@@ -6,14 +6,14 @@ import { Loader2 } from 'lucide-react';
 
 export default function ProfileEditPage() {
   const { data, isLoading: isFetchingUser } = useGetMeQuery();
-  const [updateUser, { isLoading: isUpdating }] = useUpdateUserProfileMutation();
+  const [updateUserProfile, { isLoading: isUpdatingProfile }] = useUpdateUserProfileMutation();
   const navigate = useNavigate();
 
   const user = data?.data?.user;
 
-  if(isFetchingUser) {
+  if(isFetchingUser && !user) {
     return (
-      <div className="flex h-[50vh] w-full items-center justify-center">
+      <div className="flex min-h-screen w-full items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-zinc-500" />
       </div>
     );
@@ -22,8 +22,8 @@ export default function ProfileEditPage() {
   return (
     <UpdateProfilePage 
       user={user} 
-      updateUser={updateUser} 
-      isLoading={isUpdating} 
+      updateProfile={updateUserProfile}
+      isLoadingProfile={isUpdatingProfile}
       onCancel={() => navigate('/profile/me')} 
     />
   );
