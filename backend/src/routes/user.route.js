@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { authCheck } from "../middlewares/auth.middleware.js";
 import upload from "../middlewares/multer.middleware.js";
-import { getMe, onboarding } from "../controllers/user.controller.js";
+import { getMe, getUser, onboarding, updateMe } from "../controllers/user.controller.js";
 
 const router = Router();
 
@@ -10,5 +10,7 @@ router.route('/me/onboarding').patch(
     authCheck, upload.fields([{ name: 'avatar', maxCount: 1 }]), onboarding
 );
 router.route('/me').get(authCheck, getMe);
+router.route('/me').patch(authCheck, updateMe);
+router.route('/:id').get(authCheck, getUser);
 
 export default router;
