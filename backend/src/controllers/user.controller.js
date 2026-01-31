@@ -124,8 +124,9 @@ export const updateMe = asyncHandler(async (req, res) => {
 
 });
 export const getUser = asyncHandler(async (req, res) => {
-    const { id, username, email } = req.body;
-
+    const { username, email } = req.body;
+    const { id } = req.params;
+    
     if(!id && !username && !email) {
         throw new ApiError(400, "At least one identifier (id, username, or email) is required.");
     }
