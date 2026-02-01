@@ -17,6 +17,7 @@ import { Navigate, useBlocker, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { selectCurrentUser } from '@/features/auth/authSlice';
 import { useGetMeQuery } from '@/features/auth/api/authApi';
+import { toast } from 'sonner';
 
 // --- ZOD SCHEMAS ---
 const step2Schema = z.object({
@@ -133,9 +134,9 @@ export default function Onboarding() {
     // 3. Send to Backend
     try {
       const response = await onboarding(payload).unwrap();
-      console.log(response);
+      toast.success(`Welcome! ${response.data?.user?.name}`);
     } catch (error) {
-      console.error(error);
+      toast.error(error.message || 'Failed to onboard user.');
     }
   };
 

@@ -28,6 +28,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { ImageCropperDialog } from "@/components/ImageCropperDialog";
+import { toast } from "sonner";
 
 // --- Zod Schema ---
 const profileFormSchema = z.object({
@@ -153,8 +154,11 @@ export default function UpdateProfilePage({
       const formData = new FormData();
       formData.append("avatar", selectedFile, "avatar.jpg");
       await updateAvatar(formData).unwrap();
+      toast.success("Avatar updated successfully.")
       setSelectedFile(null);
-    } catch (error) { console.error(error); }
+    } catch (error) { 
+      toast.error(error.message || "Failed to update avatar.");
+    }
   };
 
   // ==========================
@@ -201,13 +205,13 @@ export default function UpdateProfilePage({
 
       // Call the specialized Profile mutation
       await updateProfile(data).unwrap();
-      
+      toast.success("Profile updated successfully.");
       // Reset the form with the new data so 'isDirty' resets to false
       form.reset(data);
 
       // toast({ title: "Profile Updated", description: "Your details have been saved." });
     } catch (error) {
-      // toast({ title: "Error", description: "Failed to update profile.", variant: "destructive" });
+      toast.error(error.message || "Failed to update profile.");
     }
   };
 

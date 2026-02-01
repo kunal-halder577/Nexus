@@ -30,6 +30,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { useRegisterMutation } from "@/features/auth/api/authApi.js";
 import { Link, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 // Schema definition (Zod works the same in JS and TS)
 const dataSchema = z.object({
@@ -80,9 +81,11 @@ const Register = () => {
   const onSubmit = async (data) => {
     try {
       const response = await register(data).unwrap();
+      toast.success('User registered successfully.');
       navigate('/onboarding', { replace: true });
       console.log("API Response:", response.data);
     } catch (err) {
+      toast.error('Registration failed.');
       console.error("Registration Error:", err);
     }
   };

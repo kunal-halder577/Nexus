@@ -27,6 +27,7 @@ import { Separator } from "@/components/ui/separator";
 import { useGetMeQuery, useLoginMutation } from "@/features/auth/api/authApi";
 import useAuthStore from "@/stores/auth.store";
 import Loader from "@/components/Loader.jsx";
+import { toast } from "sonner";
 
 const dataSchema = z.object({
   identifier: z.string().min(1, "Username or Email is required").trim(),
@@ -57,6 +58,7 @@ const Login = () => {
     try {
       const response = await login(dataBody).unwrap();
       const isOnboarded = response.data?.isOnboarded;
+      toast.success(`Welcome back! ${response.data?.user?.name}`)
       if(!isOnboarded) {
         navigate('/onboarding', { replace: true })
       } else {
@@ -64,7 +66,7 @@ const Login = () => {
       }
       console.log("API Response:", response.data);
     } catch (err) {
-      console.error("Login:", err);
+      toast.error(err.message || 'Login failed.');
     }
   };
 
