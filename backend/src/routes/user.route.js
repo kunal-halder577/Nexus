@@ -14,6 +14,7 @@ router.route('/update-avatar').patch(
 );
 router.route('/me').get(authCheck, getMe);
 router.route('/me').patch(authCheck, updateMe);
+router.route('/search').get(authCheck, getUser);
 router.route('/:id').get(authCheck, getUser);
 
 export default router;
