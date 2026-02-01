@@ -161,7 +161,7 @@ export const updateAvatar = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, 'Avatar updated successfully.', user));
 });
 export const getUser = asyncHandler(async (req, res) => {
-    const { username, email } = req.body;
+    const { username, email } = req.query;
     const { id } = req.params;
     
     if(!id && !username && !email) {
