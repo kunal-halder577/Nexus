@@ -21,7 +21,7 @@ export const onboarding = asyncHandler(async (req, res) => {
     }
     if(avatarType === 'file' && avatarLocalPath) {
         try {
-            const response = await uploadImageOnCloud(avatarLocalPath, 'avatar');
+            const response = await uploadImageOnCloud(avatarLocalPath);
             avatarCloudUrl = response.url;
             avatarPublicId = response.publicId;
         } catch (error) {
@@ -133,7 +133,7 @@ export const updateAvatar = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Avatar file is required.");
     }
 
-    const { url, publicId } = await uploadImageOnCloud(localFilePath, 'avatar');
+    const { url, publicId } = await uploadImageOnCloud(localFilePath);
 
     if (!url) {
         throw new ApiError(500, "Failed to upload image to cloud.");
