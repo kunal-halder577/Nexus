@@ -2,6 +2,7 @@ import { v2 as cloudinary } from 'cloudinary';
 import { configDotenv } from 'dotenv';
 import fs from 'fs';
 configDotenv();
+
 // Configuration
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -10,30 +11,30 @@ cloudinary.config({
 });
 
 // Upload an image
-export const uploadImageOnCloud = async (filepath, imageName = 'profile', folder = 'images') => {
+export const uploadImageOnCloud = async (filepath, folder = 'images') => {
   try {
     const uploadUrl = await cloudinary.uploader.upload(filepath, {
-      public_id: imageName,
       folder: folder,
       resource_type: 'image',
       allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
       timeout: 60000,
-      overwrite: true,
+      use_filename: true, 
+      unique_filename: false, // Multer already made it unique
+
       transformation: [
         { width: 400, height: 400, crop: 'fill', gravity: 'face' },
         { quality: 'auto', fetch_format: 'auto' },
       ],
     });
 
-    //deleting from local server
-    fs.unlinkSync(filepath);
+    if (fs.existsSync(filepath)) fs.unlinkSync(filepath);
 
     return {
       url: uploadUrl.secure_url,
       publicId: uploadUrl.public_id,
     };
   } catch (error) {
-    fs.unlinkSync(filepath);
+    if (fs.existsSync(filepath)) fs.unlinkSync(filepath);
     throw new Error(error?.message || 'Cloud upload failed.');
   }
 };
