@@ -84,18 +84,22 @@ export default function UpdateProfilePage({
   const [cropDialogOpen, setCropDialogOpen] = useState(false);
   const [tempImgSrc, setTempImgSrc] = useState(null);
   
+  // --- Default Values ---
+  const defaultValues = {
+    name: user?.name || "",
+    username: user?.username || "",
+    bio: user?.bio || "",
+    age: (user?.age !== null && user?.age !== undefined) ? String(user.age) : "",
+    // Force lowercase/trim immediately
+    gender: user?.gender ? user.gender.toLowerCase().trim() : "", 
+    location: user?.location || "",
+    website: user?.website || "",
+  };
+
   // --- Profile Form Hook ---
   const form = useForm({
     resolver: zodResolver(profileFormSchema),
-    defaultValues: {
-      name: "",
-      username: "",
-      bio: "",
-      age: "",
-      gender: "", 
-      location: "",
-      website: "",
-    },
+    defaultValues: defaultValues,
     mode: "onChange",
   });
 
@@ -103,15 +107,7 @@ export default function UpdateProfilePage({
   // Now, the form ONLY resets when the actual user data from the DB changes.
   useEffect(() => {
     if (user) {
-      const clearUser = {
-        name: user.name || "",
-        username: user.username || "",
-        bio: user.bio || "",
-        age: user.age? String(user.age) : "",
-        gender: user.gender || "",
-        location: user.location || "",
-        website: user.website || "",
-      };
+      const clearUser = defaultValues;
       form.reset(clearUser);
       // Only set the preview to the user's url if we haven't selected a new file yet
       if (!selectedFile) {
@@ -126,7 +122,7 @@ export default function UpdateProfilePage({
   const handleFileChange = (event) => {
     const file = event.target.files?.[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) return; 
+      if (file.size > 8 * 1024 * 1024) return; 
       
       const reader = new FileReader();
       reader.addEventListener("load", () => {
@@ -155,7 +151,7 @@ export default function UpdateProfilePage({
     if (!selectedFile) return;
     try {
       const formData = new FormData();
-      formData.append("avatar", selectedFile);
+      formData.append("avatar", selectedFile, "avatar.jpg");
       await updateAvatar(formData).unwrap();
       setSelectedFile(null);
     } catch (error) { console.error(error); }
@@ -287,7 +283,7 @@ export default function UpdateProfilePage({
             ) : (
                 <div className="text-sm text-muted-foreground">
                     <p>Allowed: JPG, PNG, WEBP.</p>
-                    <p>Max size: 5MB.</p>
+                    <p>Max size: 8MB.</p>
                 </div>
             )}
           </CardContent>

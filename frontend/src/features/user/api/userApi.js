@@ -25,6 +25,14 @@ export const userApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ['User'],
     }),
+    updateUserAvatar: builder.mutation({
+      query: (data) => ({
+        url: '/users/update-avatar',
+        method: 'PATCH',
+        body: data,
+      }),
+      invalidatesTags: ['User'],
+    }),
   }),
   overrideExisting: false,
 });
@@ -33,4 +41,5 @@ export const {
   useOnboardingMutation,
   useGetUserProfileQuery,
   useUpdateUserProfileMutation,
+  useUpdateUserAvatarMutation,
 } = userApi;
