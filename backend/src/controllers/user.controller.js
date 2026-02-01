@@ -2,7 +2,7 @@ import User from '../models/user.model.js';
 import ApiError from '../utils/ApiError.js';
 import ApiResponse from '../utils/ApiResponse.js';
 import asyncHandler from '../utils/asyncHandler.js'
-import { uploadImageOnCloud } from '../utils/cloudinary.js'
+import { deleteImageFromCloud, uploadImageOnCloud } from '../utils/cloudinary.js'
 
 export const onboarding = asyncHandler(async (req, res) => {
     const { name, avatar, avatarType } = req.body;
@@ -15,6 +15,9 @@ export const onboarding = asyncHandler(async (req, res) => {
     }
     if (avatarType && !["file", "url"].includes(avatarType)) {
         throw new ApiError(400, "Invalid avatarType. Must be 'file' or 'url'.");
+    }
+    if (avatarType === 'file' && !avatarLocalPath) {
+        throw new ApiError(400, "Avatar file is missing.");
     }
     if(avatarType === 'file' && avatarLocalPath) {
         try {
@@ -122,6 +125,40 @@ export const updateMe = asyncHandler(async (req, res) => {
     .status(200)
     .json(new ApiResponse(200, "User updated successfully.", user));
 
+});
+export const updateAvatar = asyncHandler(async (req, res) => {    
+    const localFilePath = req.file?.path;
+
+    if (!localFilePath) {
+        throw new ApiError(400, "Avatar file is required.");
+    }
+
+    const { url, publicId } = await uploadImageOnCloud(localFilePath, 'avatar');
+
+    if (!url) {
+        throw new ApiError(500, "Failed to upload image to cloud.");
+    }
+
+    const user = await User.findById(req.user?._id);
+
+    if (!user) {
+        throw new ApiError(404, "User not found.");
+    }
+    if (user.avatarPublicId) {
+        await deleteImageFromCloud(user.avatarPublicId);
+    }
+
+    user.avatarUrl = url;
+    
+    if (publicId) {
+        user.avatarPublicId = publicId;
+    }
+
+    await user.save({ validateBeforeSave: false }); // Save the changes
+
+    return res
+    .status(200)
+    .json(new ApiResponse(200, 'Avatar updated successfully.', user));
 });
 export const getUser = asyncHandler(async (req, res) => {
     const { username, email } = req.body;
