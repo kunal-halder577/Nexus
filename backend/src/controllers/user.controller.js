@@ -163,28 +163,36 @@ export const updateAvatar = asyncHandler(async (req, res) => {
 export const getUser = asyncHandler(async (req, res) => {
     const { username, email } = req.query;
     const { id } = req.params;
-    
-    if(!id && !username && !email) {
-        throw new ApiError(400, "At least one identifier (id, username, or email) is required.");
-    }
-    
-    let user;
 
-    if(id) {
-        user = await User.findById(id);
-    } else {
-        const queryCriteria = [];
+    if (id) {
+        const user = await User.findById(id);
+        if (!user) throw new ApiError(404, "User not found.");
         
-        if(username) queryCriteria.push({ username });
-        if(email) queryCriteria.push({ email });
-        
-        user = await User.findOne({
-            $or: queryCriteria
-        });
+        return res
+        .status(200)
+        .json(new ApiResponse(200, "User fetched successfully.", user));
     }
-    if(!user) throw new ApiError(404, "User not found.");
+
+    const queryCriteria = [];
+    
+    // ('i' = case insensitive)
+    if (username) {
+        queryCriteria.push({ username: { $regex: username, $options: "i" } });
+    }
+    if (email) {
+        queryCriteria.push({ email: { $regex: email, $options: "i" } });
+    }
+
+    if (queryCriteria.length === 0) {
+        throw new ApiError(400, "Search parameters missing");
+    }
+
+    const users = await User.find({
+        $or: queryCriteria
+    });
 
     return res
     .status(200)
-    .json(new ApiResponse(200, "User fetched successfully.", user));
+    .json(new ApiResponse(200, "Search completed.", users));
+    
 });
