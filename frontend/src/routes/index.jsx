@@ -12,6 +12,8 @@ import PublicRoute from "@/pages/Auth/Public";
 import Home from "@/pages/Home/Home";
 import ProfilePage from "@/pages/Profile/MyProfile";
 import ProfileEditPage from "@/pages/Profile/ProfileEdit";
+import SearchPage from "@/pages/Search/SearchPage";
+import OtherUserProfile from "@/pages/Profile/OtherProfile";
 
 const router = createBrowserRouter([
   // Authenticaion
@@ -60,9 +62,17 @@ const router = createBrowserRouter([
                 element: <ProfilePage />
               },
               {
+                path: "profile/users/:id",
+                element: <OtherUserProfile />
+              },
+              {
                 path: "profile/update/me",
                 element: <ProfileEditPage />
-              }
+              },
+              {
+                path: "explore",
+                element: <SearchPage />
+              },
             ]
           }
         ],

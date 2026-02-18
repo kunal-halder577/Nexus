@@ -4,23 +4,39 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { useLocation, useNavigate } from 'react-router-dom';
 
 const RightSidebar = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const isSearchPage = location.pathname === '/explore';
+
+  const handleSidebarSearch = (e) => {
+    const query = e.target.value.trim();
+    if(e.key === 'Enter' && query.length > 2) {
+      navigate(`/explore?q=${encodeURIComponent(query)}`);
+    }
+    return;
+  }
+
   return (
     // 2. We keep the outer div for layout, but let ScrollArea handle the overflow
     <div className="flex flex-col h-full py-4 px-4 xl:px-6">
       
       {/* SEARCH BAR (Stayed outside ScrollArea so it remains truly sticky) */}
-      <div className="mb-4">
-        <div className="relative group">
-          <Search className="absolute left-4 top-3 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
-          <Input 
-            type="text" 
-            placeholder="Search Nexus" 
-            className="h-12 pl-12 pr-4 rounded-full bg-secondary/50 border-transparent focus-visible:ring-1 focus-visible:ring-primary focus-visible:bg-background focus-visible:border-primary transition-all text-base"
-          />
+      {!isSearchPage && (
+        <div className="mb-4">
+          <div className="relative group">
+            <Search className="absolute left-4 top-3 h-5 w-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+            <Input 
+              type="text" 
+              placeholder="Search Nexus" 
+              className="h-12 pl-12 pr-4 rounded-full bg-secondary/50 border-transparent focus-visible:ring-1 focus-visible:ring-primary focus-visible:bg-background focus-visible:border-primary transition-all text-base"
+              onKeyDown={handleSidebarSearch}
+            />
+          </div>
         </div>
-      </div>
+      )}
 
       {/* 3. Wrap everything else in ScrollArea */}
       <ScrollArea className="flex-1 w-full rounded-md">

@@ -33,6 +33,22 @@ export const userApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ['User'],
     }),
+    getUserById: builder.query({
+      query: (id) => ({
+        url: `users/${id}`,
+        method: 'GET'
+      }),
+      transformResponse: (response) => response.data,
+    }),
+    searchUsers: builder.query({
+      query: (searchArgs) => ({
+        url: '/users/search',
+        params: {
+          username: searchArgs.username,
+          email: searchArgs.email,
+        }
+      })
+    })
   }),
   overrideExisting: false,
 });
@@ -42,4 +58,7 @@ export const {
   useGetUserProfileQuery,
   useUpdateUserProfileMutation,
   useUpdateUserAvatarMutation,
+  useSearchUsersQuery,
+  useLazySearchUsersQuery,
+  useGetUserByIdQuery,
 } = userApi;
