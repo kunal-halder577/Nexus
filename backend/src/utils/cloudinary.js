@@ -27,16 +27,54 @@ export const uploadImageOnCloud = async (filepath, folder = 'images') => {
       ],
     });
 
-    if (fs.existsSync(filepath)) fs.unlinkSync(filepath);
+    await fs.unlink(filepath);
+    const aspectRatio = +(uploadUrl.width / uploadUrl.height).toFixed(2);
 
     return {
       url: uploadUrl.secure_url,
       publicId: uploadUrl.public_id,
+      width: uploadUrl.width,
+      height: uploadUrl.height,
+      aspectRatio: aspectRatio, // e.g., "1.00"
+      // Generate a quick thumbnail URL using Cloudinary's URL helper
+      thumbnailUrl: cloudinary.url(uploadUrl.public_id, {
+        width: 150,
+        height: 150,
+        crop: 'thumb',
+        gravity: 'face',
+        quality: 'auto'
+      })
     };
   } catch (error) {
-    if (fs.existsSync(filepath)) fs.unlinkSync(filepath);
+    try {
+      await fs.unlink(filepath);
+    } catch (unlinkError) {
+      console.error("Failed to delete local file:", unlinkError);
+    }
     throw new Error(error?.message || 'Cloud upload failed.');
   }
+};
+
+// Upload multiple images
+export const uploadMultipleImages = async (filePaths, folder = 'images') => {
+  const uploadPromises = filePaths.map(path =>
+    uploadImageOnCloud(path, folder)
+  );
+
+  const results = await Promise.allSettled(uploadPromises);
+
+  const successfulUploads = results
+    .filter(r => r.status === 'fulfilled')
+    .map(r => r.value);
+
+  const failedUploads = results
+    .filter(r => r.status === 'rejected');
+
+  if (failedUploads.length > 0) {
+    throw new Error('Some uploads failed');
+  }
+
+  return successfulUploads;
 };
 
 // Delete the image
@@ -49,5 +87,21 @@ export const deleteImageFromCloud = async (publicId) => {
     return result; // { result: "ok" }
   } catch (error) {
     throw new Error(error?.message || 'Failed delete image from cloud.');
+  }
+};
+
+// Delete multiple images
+export const deleteMultipleImages = async (publicIds) => {
+  try {
+    // cloudinary.api.delete_resources takes an array of public IDs
+    const result = await cloudinary.api.delete_resources(publicIds, {
+      invalidate: true,
+      resource_type: 'image',
+    });
+    
+    // { deleted: { publicId1: "deleted", publicId2: "not_found" }, ... }
+    return result; 
+  } catch (error) {
+    throw new Error(error?.message || 'Failed to bulk delete images from cloud.');
   }
 };
