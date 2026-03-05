@@ -1,7 +1,8 @@
+import FeedContainer from "@/components/Feed/FeedContainer";
 import Feed from "@/components/Layout/Feed";
 
 const Home = () => {
-  return <Feed />
+  return <FeedContainer />
 };
 
 export default Home;

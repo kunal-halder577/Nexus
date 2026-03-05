@@ -1,22 +1,46 @@
-import React from 'react';
-import { Image, Smile, MapPin, Sparkles, MessageCircle, Repeat2, Heart, Share } from 'lucide-react';
+import React, { useEffect } from 'react';
+import { Image, Smile, MapPin, Loader2 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import PostItem from './Post';
-import { useSelector } from 'react-redux';
-import { selectCurrentUser } from '@/features/auth/authSlice';
+import FeedPost from '@/features/post/components/FeedPost';
+import { useInView } from 'react-intersection-observer'; 
+const FeedView = ({ 
+    user, 
+    posts, 
+    isLoading,
+    isFetching,
+    isError,
+    hasNextPage,
+    fetchNextPage,
+    onCreatePost
+}) => {
+  const { ref: sentinelRef, inView } = useInView({
+    rootMargin: '200px', 
+  });
 
-const Feed = () => {
-  const user = useSelector(selectCurrentUser);
+  useEffect(() => {
+    if (inView && hasNextPage && !isFetching) {
+      fetchNextPage();
+    }
+  }, [inView, hasNextPage, isFetching, fetchNextPage]);
 
+  if (isError) return <div className="p-4 text-red-500">Error loading feed.</div>;
+
+  if (isLoading && posts.length === 0) {
+    return (
+      <div className="flex justify-center p-8">
+        <Loader2 className="animate-spin text-indigo-500" />
+      </div>
+    );
+  }
+
+  
   return (
     <div className="flex flex-col w-full h-full pb-20">
       
       {/* ==================== 1. STICKY HEADER & TABS ==================== */}
       <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b border-border">
-        {/* Mobile Sidebar Trigger would go here if needed later */}
-        
         <div className="flex w-full">
           <button className="flex-1 py-4 font-bold text-foreground border-b-4 border-primary hover:bg-accent transition-colors">
             For You
@@ -46,15 +70,12 @@ const Feed = () => {
                 <Button variant="ghost" size="icon" className="rounded-full hover:bg-primary/10 hover:text-primary">
                   <Image className="h-5 w-5" />
                 </Button>
-                <Button variant="ghost" size="icon" className="rounded-full hover:bg-primary/10 hover:text-primary">
-                  <Smile className="h-5 w-5" />
-                </Button>
-                <Button variant="ghost" size="icon" className="rounded-full hover:bg-primary/10 hover:text-primary">
-                  <MapPin className="h-5 w-5" />
-                </Button>
+                {/* ... other buttons ... */}
               </div>
-
-              <Button className="rounded-full px-6 font-bold">
+              <Button 
+                className="rounded-full px-6 font-bold"
+                onClick={() => onCreatePost("some text")} // Hooked up to props!
+              >
                 Post
               </Button>
             </div>
@@ -64,37 +85,30 @@ const Feed = () => {
 
       {/* ==================== 3. POST LIST ==================== */}
       <div className="flex flex-col">
-        <PostItem 
-          name="Sarah Chen"
-          username="@sarahcodes"
-          time="2h"
-          content="Just finished setting up the new layout grid for my project. CSS Subgrid is an absolute game changer! 🚀 #webdev #css"
-          likes={243}
-          comments={12}
-          reposts={4}
-        />
-        <PostItem 
-          name="Dev Daily"
-          username="@devdaily"
-          time="5h"
-          content="What's your preferred stack for 2024? We are seeing a massive shift back to server-side rendering."
-          likes={1200}
-          comments={89}
-          reposts={340}
-        />
-        <PostItem 
-          name="Alex Doe"
-          username="@alexdoe"
-          time="12h"
-          content="Exploring the new design system. Really impressed with how clean these components look. Great work by the UI team!"
-          likes={88}
-          comments={3}
-          reposts={1}
-        />
+        {(posts ?? []).map(post => (
+          <FeedPost key={post._id} post={post} />
+        ))}
       </div>
+      
+      {/* This is the invisible sensor. We attach the 'ref' here. */}
+      <div ref={sentinelRef} className="h-4 w-full" />
+
+     {/* Show a spinner at the bottom ONLY when fetching page 2, 3, etc. */}
+      {isFetching && posts.length > 0 && (
+        <div className="flex justify-center p-4 text-muted-foreground">
+          <Loader2 className="h-6 w-6 animate-spin" />
+        </div>
+      )}
+
+      {/* If there are no more pages, optionally show an end message */}
+      {!hasNextPage && posts.length > 0 && (
+        <div className="text-center p-4 text-sm text-muted-foreground">
+          You've caught up on all posts!
+        </div>
+      )}
 
     </div>
   );
 };
 
-export default Feed;
+export default FeedView;
