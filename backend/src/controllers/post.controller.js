@@ -7,6 +7,8 @@ import asyncHandler from "../utils/asyncHandler.js"
 import { deleteMultipleMedia, uploadMultipleMedia } from "../utils/cloudinary.js";
 import User from "../models/user.model.js";
 
+const AUTHOR_PUBLIC_FIELDS = 'name username avatarUrl';
+
 export const createPost = asyncHandler(async (req, res) => {
   const userId = req.user._id;
   const { caption, idempotentKey } = req.body;
@@ -118,7 +120,7 @@ export const getPostById = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Invalid post id.");
   }
 
-  const post  = await Post.findById(id);
+  const post  = await Post.findById(id).populate('author', AUTHOR_PUBLIC_FIELDS);
 
   if(!post) throw new ApiError(404, "Post not found.");
 
@@ -160,6 +162,7 @@ export const getPosts = asyncHandler(async (req, res) => {
   const posts = await Post.find(query)
     .sort({ createdAt: -1, _id: -1 })
     .limit(limit)
+    .populate('author', AUTHOR_PUBLIC_FIELDS)
     .lean();
 
   const hasMore = posts.length === limit;
@@ -219,6 +222,7 @@ export const getUserPosts = asyncHandler(async (req, res) => {
   const posts = await Post.find(query)
     .sort({ createdAt: -1, _id: -1 })
     .limit(limit)
+    .populate('author', AUTHOR_PUBLIC_FIELDS)
     .lean();
 
   const hasMore = posts.length === limit;
