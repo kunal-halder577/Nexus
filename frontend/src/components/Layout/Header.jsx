@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { Bell } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { ProfileDropdown } from "./ProfileDropdown.jsx";

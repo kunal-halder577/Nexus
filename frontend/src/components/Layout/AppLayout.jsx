@@ -1,23 +1,16 @@
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
+import { SidebarProvider } from "@/components/ui/sidebar"
 import LeftSidebar from "./Sidebar"
-import Feed from "./Feed"
 import RightSidebar from "./Discovery"
 import { Outlet } from "react-router-dom"
-// Import your existing components here:
-
-
-
 
 export default function AppLayout() {
   return (
     <SidebarProvider>
-      {/* 1. LEFT SIDEBAR (Shadcn) */}
+      
       <LeftSidebar />
 
-      {/* Main Wrapper for the rest of the layout */}
+      
       <main className="flex w-full min-h-screen">
-        
-        {/* 2. MIDDLE FEED (Responsive, expands to fill space) */}
         <section className="flex-1 min-w-0 border-r border-border">
           {/* Mobile Sidebar Trigger (Visible only on mobile/tablet) */}
           {/* <div className="md:hidden p-4 border-b border-border sticky top-0 bg-background z-10">

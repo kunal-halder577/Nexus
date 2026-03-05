@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Image, Smile, MapPin, Loader2 } from 'lucide-react';
+import { Image, Loader2 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
