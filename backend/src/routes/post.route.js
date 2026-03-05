@@ -5,12 +5,17 @@ import { createPost, deletePost, getPostById, getPosts, getUserPosts, updatePost
 
 const router = Router();
 
+// 1. Static/Specific routes go FIRST
 router.route("/").post(
-    authCheck, upload.fields([{ name: "media", maxCount: 10}]), createPost
+  authCheck, upload.fields([{ name: "media", maxCount: 10}]), createPost
 );
-router.route("/:id").get(authCheck, getPostById);
 router.route("/feed").get(authCheck, getPosts);
+
+// 2. Specific dynamic routes go NEXT
 router.route("/user/:userId").get(authCheck, getUserPosts);
+
+// 3. Catch-all/Wildcard dynamic routes go LAST
+router.route("/:id").get(authCheck, getPostById);
 router.route("/:id").patch(authCheck, updatePost);
 router.route("/:id").delete(authCheck, deletePost);
 
