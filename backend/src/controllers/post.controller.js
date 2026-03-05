@@ -165,8 +165,8 @@ export const getPosts = asyncHandler(async (req, res) => {
   const hasMore = posts.length === limit;
   const lastPost = posts[posts.length - 1];
   const nextCursor = hasMore? {
-    createdAt: lastPost.createdAt,
-    id: lastPost._id
+    cursorCreatedAt: lastPost.createdAt.toISOString(),
+    cursorId: lastPost._id.toString()
   } : null;
 
   const response = {
@@ -224,9 +224,9 @@ export const getUserPosts = asyncHandler(async (req, res) => {
   const hasMore = posts.length === limit;
   const lastPost = posts[posts.length - 1];
   
-  const nextCursor = hasMore ? {
-    createdAt: lastPost.createdAt,
-    id: lastPost._id
+  const nextCursor = hasMore? {
+    cursorCreatedAt: lastPost.createdAt.toISOString(),
+    cursorId: lastPost._id.toString()
   } : null;
 
   const response = {
