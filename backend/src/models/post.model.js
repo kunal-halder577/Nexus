@@ -86,9 +86,8 @@ postSchema.index({ author: 1, createdAt: -1, _id: -1 });
 
 postSchema.pre('validate', function() {
     if (!this.content?.caption && (!this.media || this.media.length === 0)) {
-        return next(new Error('Post must have either a caption or media'));
+        throw new Error('Post must have either a caption or media');
     }
-    next();
 });
 
 const Post = model('Post', postSchema);

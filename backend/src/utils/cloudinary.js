@@ -1,6 +1,6 @@
 import { v2 as cloudinary } from 'cloudinary';
 import { configDotenv } from 'dotenv';
-import fs from 'fs';
+import fs from 'fs/promises';
 configDotenv();
 
 // Configuration
@@ -10,98 +10,98 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// Upload an image
-export const uploadImageOnCloud = async (filepath, folder = 'images') => {
+export const uploadMediaToCloud = async (filepath, folder = 'media') => {
   try {
     const uploadUrl = await cloudinary.uploader.upload(filepath, {
-      folder: folder,
-      resource_type: 'image',
-      allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
-      timeout: 60000,
-      use_filename: true, 
-      unique_filename: false, // Multer already made it unique
-
-      transformation: [
-        { width: 400, height: 400, crop: 'fill', gravity: 'face' },
-        { quality: 'auto', fetch_format: 'auto' },
-      ],
+      folder,
+      resource_type: 'auto', // ✅ handles image, video, gif automatically
+      allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'gif', 'mp4', 'webm', 'mov'],
+      timeout: 120000, // ✅ increase for video — 60s is too tight
+      use_filename: true,
+      unique_filename: false,
     });
 
     await fs.unlink(filepath);
+
     const aspectRatio = +(uploadUrl.width / uploadUrl.height).toFixed(2);
+    const isVideo = uploadUrl.resource_type === 'video';
 
     return {
       url: uploadUrl.secure_url,
       publicId: uploadUrl.public_id,
+      resourceType: uploadUrl.resource_type, // 'image' | 'video'
       width: uploadUrl.width,
       height: uploadUrl.height,
-      aspectRatio: aspectRatio, // e.g., "1.00"
-      // Generate a quick thumbnail URL using Cloudinary's URL helper
-      thumbnailUrl: cloudinary.url(uploadUrl.public_id, {
-        width: 150,
-        height: 150,
-        crop: 'thumb',
-        gravity: 'face',
-        quality: 'auto'
-      })
+      aspectRatio,
+      duration: isVideo ? uploadUrl.duration : null, // ✅ only videos have this
+      thumbnailUrl: isVideo
+        // Cloudinary can generate a video thumbnail automatically
+        ? cloudinary.url(uploadUrl.public_id, {
+            resource_type: 'video',
+            format: 'jpg',        // grab a JPG frame
+            transformation: [{ width: 150, height: 150, crop: 'thumb' }],
+          })
+        : cloudinary.url(uploadUrl.public_id, {
+            width: 150,
+            height: 150,
+            crop: 'thumb',
+            gravity: 'face',
+            quality: 'auto',
+          }),
     };
   } catch (error) {
-    try {
-      await fs.unlink(filepath);
-    } catch (unlinkError) {
-      console.error("Failed to delete local file:", unlinkError);
-    }
+    await fs.unlink(filepath).catch(err =>
+      console.error('Failed to delete local file:', err)
+    );
     throw new Error(error?.message || 'Cloud upload failed.');
   }
 };
 
-// Upload multiple images
-export const uploadMultipleImages = async (filePaths, folder = 'images') => {
-  const uploadPromises = filePaths.map(path =>
-    uploadImageOnCloud(path, folder)
+export const uploadMultipleMedia = async (filePaths, folder = 'media') => {
+  const results = await Promise.allSettled(
+    filePaths.map(p => uploadMediaToCloud(p, folder))
   );
 
-  const results = await Promise.allSettled(uploadPromises);
-
-  const successfulUploads = results
-    .filter(r => r.status === 'fulfilled')
-    .map(r => r.value);
-
-  const failedUploads = results
-    .filter(r => r.status === 'rejected');
-
-  if (failedUploads.length > 0) {
+  const failed = results.filter(r => r.status === 'rejected');
+  if (failed.length > 0) {
+    failed.forEach(f => console.error('Upload failed:', f.reason));
     throw new Error('Some uploads failed');
   }
 
-  return successfulUploads;
+  return results.map(r => r.value);
 };
 
-// Delete the image
-export const deleteImageFromCloud = async (publicId) => {
+export const deleteMediaFromCloud = async (publicId, resourceType = 'image') => {
   try {
     const result = await cloudinary.uploader.destroy(publicId, {
       invalidate: true,
-      resource_type: 'image',
+      resource_type: resourceType, // 'image' for images + gifs, 'video' for videos
     });
-    return result; // { result: "ok" }
+    return result; // { result: 'ok' } or { result: 'not found' }
   } catch (error) {
-    throw new Error(error?.message || 'Failed delete image from cloud.');
+    throw new Error(error?.message || 'Failed to delete media from cloud.');
   }
 };
 
-// Delete multiple images
-export const deleteMultipleImages = async (publicIds) => {
-  try {
-    // cloudinary.api.delete_resources takes an array of public IDs
-    const result = await cloudinary.api.delete_resources(publicIds, {
-      invalidate: true,
+export const deleteMultipleMedia = async (mediaItems) => {
+  const images = mediaItems
+    .filter(m => m.resourceType === 'image') // covers jpg, png, webp, gif
+    .map(m => m.publicId);
+
+  const videos = mediaItems
+    .filter(m => m.resourceType === 'video') // covers mp4, webm, mov
+    .map(m => m.publicId);
+
+  const results = await Promise.allSettled([
+    images.length > 0 && cloudinary.api.delete_resources(images, {
       resource_type: 'image',
-    });
-    
-    // { deleted: { publicId1: "deleted", publicId2: "not_found" }, ... }
-    return result; 
-  } catch (error) {
-    throw new Error(error?.message || 'Failed to bulk delete images from cloud.');
-  }
+      invalidate: true,
+    }),
+    videos.length > 0 && cloudinary.api.delete_resources(videos, {
+      resource_type: 'video',
+      invalidate: true,
+    }),
+  ].filter(Boolean));
+
+  return results;
 };

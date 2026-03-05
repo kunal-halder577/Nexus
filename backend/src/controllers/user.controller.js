@@ -2,7 +2,7 @@ import User from '../models/user.model.js';
 import ApiError from '../utils/ApiError.js';
 import ApiResponse from '../utils/ApiResponse.js';
 import asyncHandler from '../utils/asyncHandler.js'
-import { deleteImageFromCloud, uploadImageOnCloud } from '../utils/cloudinary.js'
+import { deleteMediaFromCloud, uploadMediaToCloud } from '../utils/cloudinary.js'
 
 export const onboarding = asyncHandler(async (req, res) => {
     const { name, avatar, avatarType } = req.body;
@@ -21,7 +21,7 @@ export const onboarding = asyncHandler(async (req, res) => {
     }
     if(avatarType === 'file' && avatarLocalPath) {
         try {
-            const response = await uploadImageOnCloud(avatarLocalPath);
+            const response = await uploadMediaToCloud(avatarLocalPath);
             avatarCloudUrl = response.url;
             avatarPublicId = response.publicId;
         } catch (error) {
@@ -133,7 +133,7 @@ export const updateAvatar = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Avatar file is required.");
     }
 
-    const { url, publicId } = await uploadImageOnCloud(localFilePath);
+    const { url, publicId } = await uploadMediaToCloud(localFilePath);
 
     if (!url) {
         throw new ApiError(500, "Failed to upload image to cloud.");
@@ -145,7 +145,7 @@ export const updateAvatar = asyncHandler(async (req, res) => {
         throw new ApiError(404, "User not found.");
     }
     if (user.avatarPublicId) {
-        await deleteImageFromCloud(user.avatarPublicId);
+        await deleteMediaFromCloud(user.avatarPublicId);
     }
 
     user.avatarUrl = url;
