@@ -4,7 +4,7 @@ import Post from "../models/post.model.js";
 import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import asyncHandler from "../utils/asyncHandler.js"
-import { deleteMultipleImages, uploadMultipleImages } from "../utils/cloudinary.js";
+import { deleteMultipleMedia, uploadMultipleMedia } from "../utils/cloudinary.js";
 import User from "../models/user.model.js";
 
 export const createPost = asyncHandler(async (req, res) => {
@@ -63,14 +63,14 @@ export const createPost = asyncHandler(async (req, res) => {
 
   try {
     if (filePaths.length > 0) {
-      cloudResponse = await uploadMultipleImages(filePaths);
+      cloudResponse = await uploadMultipleMedia(filePaths);
     }
   
     const createdPost = await Post.create({
       author: userId,
       content: { caption: caption || null },
       media: cloudResponse.map(res => ({
-        type: 'Image',
+        type: res.resourceType === 'video' ? 'Video' : 'Image',
         url: res.url,
         publicId: res.publicId,
         aspectRatio: res.aspectRatio,
@@ -93,10 +93,10 @@ export const createPost = asyncHandler(async (req, res) => {
       .json(new ApiResponse(201, 'Post created successfully.', createdPost));
   } catch (error) {
 
-    if(cloudResponse.length > 0) {
-      const publicIds = cloudResponse.map(file => file.publicId);
-      await deleteMultipleImages(publicIds).catch(err => console.error("Failed to rollback cloud images: ", err)
-      );;
+    if (cloudResponse.length > 0) {
+      await deleteMultipleMedia(cloudResponse).catch(err =>
+        console.error('Failed to rollback cloud media:', err)
+      );
     }
 
     await IdempotentRecord.updateOne(
@@ -282,33 +282,29 @@ export const updatePost = asyncHandler(async (req, res) => {
 export const deletePost = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const userId = req.user._id;
-  
-  if(!id) throw new ApiError(400, "Post id is required.");
 
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    throw new ApiError(400, "Invalid post id");
-  }
+  if (!id) throw new ApiError(400, "Post id is required.");
+  if (!mongoose.Types.ObjectId.isValid(id)) throw new ApiError(400, "Invalid post id.");
+
   const post = await Post.findById(id);
-  
-  if(!post) throw new ApiError(404, "Post not found.");
 
-  if(post.author.toString() !== userId.toString()) {
+  if (!post) throw new ApiError(404, "Post not found.");
+  if (post.author.toString() !== userId.toString()) {
     throw new ApiError(403, "You're not allowed to delete this post.");
   }
 
-  if(post.media?.length > 0) {
-    const publicIds = post.media.map(media => media.publicId);
-    
-    try {
-      await deleteMultipleImages(publicIds);
-    } catch (error) {
-      throw new ApiError(500, "Failed to delete post media.");
-    } 
-  }
-
+  // ✅ 1. Delete from DB first — if this fails, cloud media is still intact
   await post.deleteOne();
 
+  // ✅ 2. Clean up Cloudinary after — pass full objects so resourceType is respected
+  if (post.media?.length > 0) {
+    await deleteMultipleMedia(post.media).catch(err =>
+      // Don't throw — post is already deleted, just log for manual cleanup
+      console.error("Failed to delete post media from cloud:", err)
+    );
+  }
+
   return res
-  .status(200)
-  .json(new ApiResponse(200, "Post deleted successfully.", {}));
+    .status(200)
+    .json(new ApiResponse(200, "Post deleted successfully.", {}));
 });
