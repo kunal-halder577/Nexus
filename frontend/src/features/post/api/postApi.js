@@ -18,7 +18,7 @@ export const postApi = baseApi.injectEndpoints({
           params.cursorCreatedAt = pageParam.cursorCreatedAt;
         }
         return {
-          url: '/posts',
+          url: '/posts/feed',
           method: 'GET',
           params: params,
         };
