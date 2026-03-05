@@ -12,9 +12,9 @@ import {
   SidebarMenuItem,
   useSidebar
 } from "@/components/ui/sidebar";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { ProfileDropdown } from './ProfileDropdown';
-import { NavLink } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { selectCurrentUser } from '@/features/auth/authSlice';
 
@@ -74,16 +74,16 @@ const LeftSidebar = () => {
 
         {/* Create Post Button */}
         <div className="px-2 mt-2">
-          <Button 
-            size="lg" 
-            className="w-full h-12 rounded-full font-bold shadow-md transition-transform cursor-pointer"
+         <Link
+            to="/post/create"
+            className={buttonVariants({ size: 'lg', className: 'w-full h-12 rounded-full font-bold shadow-md transition-transform cursor-pointer' })}
           >
             {state === "expanded" ? (
               <span className="text-lg">Create Post</span>
             ) : (
               <PenSquare className="h-6 w-6" />
             )}
-          </Button>
+          </Link>
         </div>
       </SidebarContent>
 
