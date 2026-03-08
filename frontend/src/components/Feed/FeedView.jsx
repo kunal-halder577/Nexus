@@ -4,7 +4,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import FeedPost from '@/features/post/components/FeedPost';
-import { useInView } from 'react-intersection-observer'; 
+import { useInView } from 'react-intersection-observer';
+
 const FeedView = ({ 
     user, 
     posts, 

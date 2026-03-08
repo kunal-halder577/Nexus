@@ -15,6 +15,7 @@ import ProfileEditPage from "@/pages/Profile/ProfileEdit";
 import SearchPage from "@/pages/Search/SearchPage";
 import OtherUserProfile from "@/pages/Profile/OtherProfile";
 import NexusFullPageCreate from "@/pages/Post/create-post";
+import PostDetailPage from "@/pages/Post/post-details/PostDetails";
 
 const router = createBrowserRouter([
   // Authenticaion
@@ -77,6 +78,10 @@ const router = createBrowserRouter([
               {
                 path: "post/create",
                 element: <NexusFullPageCreate />
+              },
+              {
+                path: "post/:id",
+                element: <PostDetailPage />
               }
             ]
           }
