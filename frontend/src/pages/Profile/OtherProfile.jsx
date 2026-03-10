@@ -21,6 +21,7 @@ import { cn } from '@/lib/utils';
 import { useGetUserByIdQuery } from '@/features/user/api/userApi';
 import { useSelector } from 'react-redux';
 import { selectCurrentUser } from '@/features/auth/authSlice';
+import ProfileFeedContainer from './ProfileFeedContainer';
 
 export default function OtherUserProfile() {
   const { id } = useParams();
@@ -84,10 +85,10 @@ export default function OtherUserProfile() {
             <div className="px-6 pb-6 relative">
                 <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between -mt-12 mb-4 gap-4">
                 
-                    {/* Avatar */}
-                      <Avatar className="h-32 w-32 cursor-pointer border border-border/50 transition-all hover:ring-2 hover:ring-ring hover:ring-offset-1">
+                    {/* Avatar - Added bg-background */}
+                      <Avatar className="h-32 w-32 cursor-pointer border border-border/50 transition-all hover:ring-2 hover:ring-ring hover:ring-offset-1 bg-background">
                         <AvatarImage src={user?.avatarUrl || ''} alt="@user" />
-                        <AvatarFallback>
+                        <AvatarFallback className="text-4xl">
                           {user?.name?.charAt(0) ||'U'}
                         </AvatarFallback>
                       </Avatar>
@@ -210,7 +211,8 @@ export default function OtherUserProfile() {
 
         {/* Content Tabs */}
         <div className="mt-6">
-          <div className="flex items-center w-full border-b bg-background sticky top-14 z-40">
+          {/* THE APPLE GLASS FIX APPLIED HERE */}
+          <div className="flex items-center w-full border-b bg-background/80 sticky top-0 -mt-10 pt-10 z-40 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
             <button 
               onClick={() => setActiveTab('posts')}
               className={`flex-1 pb-3 pt-2 text-sm font-medium transition-all relative ${activeTab === 'posts' ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
@@ -232,21 +234,9 @@ export default function OtherUserProfile() {
           </div>
 
           {/* Grid Content Placeholder */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-6">
-            {[1, 2, 3, 4, 5, 6].map((item) => (
-              <Card key={item} className="aspect-square bg-muted/30 border-none relative group overflow-hidden cursor-pointer hover:shadow-lg transition-all">
-                <div className="absolute inset-0 flex items-center justify-center text-muted-foreground/20 group-hover:text-muted-foreground/50 transition-colors">
-                  <ImageIcon className="h-12 w-12" />
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
-                  <div className="text-white">
-                    <p className="text-sm font-medium">Project Alpha {item}</p>
-                    <p className="text-xs opacity-80">2 days ago</p>
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </div>
+          {activeTab === 'posts' && 
+            <ProfileFeedContainer userId={user?._id} />
+          }
         </div>
       </main>
     </div>
