@@ -20,8 +20,14 @@ const baseQueryWithReAuth = async (args, api, extraOptions) => {
 
   // --- FIX 1: Handle HTML/Parsing Errors (e.g., Backend sends HTML 401) ---
   if (result.error && result.error.status === 'PARSING_ERROR') {
-    console.warn("Server returned non-JSON response. forcing logout.");
-    api.dispatch(logout());
+    // Only force logout if the underlying HTTP status was a 401
+    if (result.error.originalStatus === 401) {
+      console.warn("Server returned non-JSON 401 response. Forcing logout.");
+      api.dispatch(logout());
+    } else {
+      // It's a 404 or 500 HTML error. Don't log out, just let the component handle it.
+      console.warn(`Parsing error on status: ${result.error.originalStatus}`);
+    }
     return result;
   }
 
