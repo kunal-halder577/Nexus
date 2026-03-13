@@ -1,16 +1,14 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useCallback, useMemo } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { MoreHorizontal } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from '@/components/ui/dropdown-menu';
+import { useDeletePostMutation, useUpdatePostMutation } from '@/features/post/api/postApi';
+import PostActionMenu from '@/features/post/components/PostActionMenu';
+import { selectCurrentUser } from '@/features/auth/authSlice';
+import { useSelector } from 'react-redux';
+import { toast } from 'sonner';
 
 const formatRelativeTime = (dateString) => {
   if (!dateString) return null;
@@ -27,7 +25,60 @@ const formatRelativeTime = (dateString) => {
 
 const PostAuthorHeader = ({ post }) => {
   const author = post.author;
+  const currentUser = useSelector(selectCurrentUser);
   const relativeTime = formatRelativeTime(post.createdAt);
+  const navigate = useNavigate();
+  const [deletePost] = useDeletePostMutation();
+  const [updatePost] = useUpdatePostMutation();
+
+  const isOwnPost = currentUser._id === post.author?._id;
+
+  const handleLike = useCallback(() => {
+    const liked = post.hasLiked;
+    updatePost({
+      id:       post._id,
+      hasLiked: !liked,
+      stats:    { ...post.stats, likeCount: post.stats.likeCount + (liked ? -1 : 1) },
+    });
+  }, [post, updatePost]);
+
+  const handleDelete = useCallback(async () => {
+    try {
+      await deletePost(post._id).unwrap();
+      if (window.location.pathname.includes(post._id)) navigate('/');
+      toast.success("Post deleted successfully.");
+    } catch {
+      toast.error("Something went wrong while deleting post.");
+    }
+  }, [deletePost, navigate, post._id]);
+
+  const handleEdit   = useCallback(() => { /* TODO: open edit modal */ }, []);
+  const handleCopy   = useCallback(() => {
+    navigator.clipboard.writeText(`${window.location.origin}/post/${post._id}`);
+    toast.success("Link copied.");
+  }, [post._id]);
+  const handleShare  = useCallback(() => { /* TODO: share sheet */ }, []);
+  const handleReport = useCallback(() => { /* TODO: report flow */ }, []);
+  const handleSave   = useCallback(() => { /* TODO: save post  */ }, []);
+
+  const menuActions = useMemo(() => [
+    { label: 'Edit post',         onClick: handleEdit,   hidden: !isOwnPost },
+    { label: 'Delete post',   onClick: handleDelete, variant: 'destructive', hidden: !isOwnPost },
+    { label: 'Report post',   onClick: handleReport, variant: 'destructive', hidden: isOwnPost  },
+    { label: 'Block user',    onClick: () => {},     variant: 'warning',     hidden: isOwnPost  },
+    { type:  'separator',                                hidden: !isOwnPost },
+    { label: 'Turn off comments', onClick: () => {},     hidden: !isOwnPost },
+    { label: 'Bookmark',          onClick: () => {},     hidden: !isOwnPost },
+    { label: 'Save post',         onClick: handleSave,   hidden: isOwnPost  },
+    { label: 'Bookmark',          onClick: () => {},     hidden: isOwnPost  },
+    { type:  'separator' },
+    { label: 'Hide post',         onClick: () => {},     hidden: isOwnPost  },
+    { label: 'Unfollow user',     onClick: () => {},     hidden: isOwnPost  },
+    { type:  'separator' },
+    { label: 'Copy link',         onClick: handleCopy  },
+    { label: 'Share post',        onClick: handleShare },
+    { type:  'separator',                                hidden: isOwnPost  },
+  ], [isOwnPost, handleEdit, handleDelete, handleSave, handleCopy, handleShare, handleReport]);
 
   return (
     <div className="flex items-center justify-between">
@@ -70,25 +121,15 @@ const PostAuthorHeader = ({ post }) => {
         </div>
       </Link>
 
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground"
-          >
-            <MoreHorizontal className="w-4 h-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-44 rounded-xl">
-          <DropdownMenuItem className="cursor-pointer text-sm">Copy link</DropdownMenuItem>
-          <DropdownMenuItem className="cursor-pointer text-sm">Share post</DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem className="cursor-pointer text-sm text-destructive focus:text-destructive">
-            Report post
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <PostActionMenu actions={menuActions}>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground"
+        >
+          <MoreHorizontal className="w-4 h-4" />
+        </Button>
+      </PostActionMenu>
     </div>
   );
 };

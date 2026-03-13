@@ -7,10 +7,14 @@ import { Card } from "@/components/ui/card";
 import { MessageSquare, Heart, Share2, MoreHorizontal, PlayCircle } from "lucide-react";
 import parse from 'html-react-parser';
 import DOMPurify from 'dompurify';
-import { useUpdatePostMutation } from '../api/postApi';
+import { useDeletePostMutation, useUpdatePostMutation } from '../api/postApi';
 import MediaLightbox from '@/components/shared/MediaLightbox';
+import { useSelector } from 'react-redux';
+import { selectCurrentUser } from '@/features/auth/authSlice';
+import { toast } from 'sonner';
+import PostActionMenu from './PostActionMenu.jsx';
 
-// ─── FIX 2: Infer MIME type from URL extension, not hardcoded ────────────────
+// ─── MIME type helper ─────────────────────────────────────────────────────────
 const EXTENSION_TO_MIME = {
   jpg: 'image/jpeg', jpeg: 'image/jpeg',
   png: 'image/png',  webp: 'image/webp',
@@ -35,7 +39,7 @@ const toLibItems = (mediaArr) =>
     type:         getMimeType(item),
   }));
 
-// ─── FIX 3: Safe time formatter with invalid date guard ──────────────────────
+// ─── Time formatter ───────────────────────────────────────────────────────────
 const formatTime = (dateString) => {
   if (!dateString) return '';
   const ts = new Date(dateString).getTime();
@@ -51,17 +55,16 @@ const formatTime = (dateString) => {
   return new Date(dateString).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 };
 
-// ─── FIX 1: Caption — useMemo + strip HTML for accurate length check ─────────
+// ─── Caption ──────────────────────────────────────────────────────────────────
 const stripHtml = (html) => html.replace(/<[^>]*>/g, '');
 
 const Caption = ({ text }) => {
   const [expanded, setExpanded] = useState(false);
   if (!text) return null;
 
-  // Memoised so DOMPurify + parse don't run on every render
   const { parsed, plainLength } = useMemo(() => ({
     parsed:      parse(DOMPurify.sanitize(text)),
-    plainLength: stripHtml(text).length,   // visible character count, no tags
+    plainLength: stripHtml(text).length,
   }), [text]);
 
   return (
@@ -90,7 +93,7 @@ const Caption = ({ text }) => {
   );
 };
 
-// ─── Media grid ──────────────────────────────────────────────────────────────
+// ─── Media grid ───────────────────────────────────────────────────────────────
 const MediaGrid = ({ media, onOpen }) => {
   const count = media.length;
   if (count === 0) return null;
@@ -152,7 +155,7 @@ const MediaGrid = ({ media, onOpen }) => {
   );
 };
 
-// ─── Stat button ─────────────────────────────────────────────────────────────
+// ─── Stat button ──────────────────────────────────────────────────────────────
 const StatBtn = ({ icon: Icon, count, onClick, active, activeClass, hoverClass, filled }) => (
   <Button
     variant="ghost"
@@ -169,9 +172,13 @@ const StatBtn = ({ icon: Icon, count, onClick, active, activeClass, hoverClass, 
 
 // ─── Main component ───────────────────────────────────────────────────────────
 const FeedPost = ({ post }) => {
-  const navigate = useNavigate();
+  const navigate    = useNavigate();
+  const currentUser = useSelector(selectCurrentUser);
   const [updatePost] = useUpdatePostMutation();
+  const [deletePost] = useDeletePostMutation();
   const [lightboxIndex, setLightboxIndex] = useState(null);
+
+  const isOwnPost = currentUser._id === post.author?._id;
 
   const libItems = useMemo(
     () => (post.media?.length ? toLibItems(post.media) : []),
@@ -187,15 +194,52 @@ const FeedPost = ({ post }) => {
     });
   }, [post, updatePost]);
 
-  const openPost     = () => navigate(`/post/${post._id}`);
-  const openLightbox = (idx) => setLightboxIndex(idx);
+  const handleDelete = useCallback(async () => {
+    try {
+      await deletePost(post._id).unwrap();
+      if (window.location.pathname.includes(post._id)) navigate('/');
+      toast.success("Post deleted successfully.");
+    } catch {
+      toast.error("Something went wrong while deleting post.");
+    }
+  }, [deletePost, navigate, post._id]);
 
-  const authorInitial  = post.author?.name?.[0]?.toUpperCase() ?? '?';
-  const formattedTime  = formatTime(post.createdAt); // called once, used twice
+  const handleEdit   = useCallback(() => { /* TODO: open edit modal */ }, []);
+  const handleCopy   = useCallback(() => {
+    navigator.clipboard.writeText(`${window.location.origin}/post/${post._id}`);
+    toast.success("Link copied.");
+  }, [post._id]);
+  const handleShare  = useCallback(() => { /* TODO: share sheet */ }, []);
+  const handleReport = useCallback(() => { /* TODO: report flow */ }, []);
+  const handleSave   = useCallback(() => { /* TODO: save post  */ }, []);
+
+  const openPost     = () => navigate(`/post/${post._id}`);
+  const openLightbox = useCallback((idx) => setLightboxIndex(idx), []);
+
+  const formattedTime = formatTime(post.createdAt);
+  const authorInitial = post.author?.name?.[0]?.toUpperCase() ?? '?';
+
+  const menuActions = useMemo(() => [
+    { label: 'Edit post',         onClick: handleEdit,   hidden: !isOwnPost },
+    { label: 'Delete post',   onClick: handleDelete, variant: 'destructive', hidden: !isOwnPost },
+    { label: 'Report post',   onClick: handleReport, variant: 'destructive', hidden: isOwnPost  },
+    { label: 'Block user',    onClick: () => {},     variant: 'warning',     hidden: isOwnPost  },
+    { type:  'separator',                                hidden: !isOwnPost },
+    { label: 'Turn off comments', onClick: () => {},     hidden: !isOwnPost },
+    { label: 'Bookmark',          onClick: () => {},     hidden: !isOwnPost },
+    { label: 'Save post',         onClick: handleSave,   hidden: isOwnPost  },
+    { label: 'Bookmark',          onClick: () => {},     hidden: isOwnPost  },
+    { type:  'separator' },
+    { label: 'Hide post',         onClick: () => {},     hidden: isOwnPost  },
+    { label: 'Unfollow user',     onClick: () => {},     hidden: isOwnPost  },
+    { type:  'separator' },
+    { label: 'Copy link',         onClick: handleCopy  },
+    { label: 'Share post',        onClick: handleShare },
+    { type:  'separator',                                hidden: isOwnPost  },
+  ], [isOwnPost, handleEdit, handleDelete, handleSave, handleCopy, handleShare, handleReport]);
 
   return (
     <>
-      {/* FIX 4: role="article" + tabIndex + keyboard handler for a11y */}
       <Card
         onClick={openPost}
         onKeyDown={(e) => {
@@ -260,14 +304,16 @@ const FeedPost = ({ post }) => {
             </div>
           </div>
 
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={(e) => e.stopPropagation()}
-            className="h-7 w-7 text-muted-foreground hover:text-foreground rounded-full shrink-0"
-          >
-            <MoreHorizontal className="w-4 h-4" />
-          </Button>
+          <PostActionMenu actions={menuActions}>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={(e) => e.stopPropagation()}
+              className="h-7 w-7 text-muted-foreground hover:text-foreground rounded-full shrink-0"
+            >
+              <MoreHorizontal className="w-4 h-4" />
+            </Button>
+          </PostActionMenu>
         </div>
 
         {/* ── CONTENT ── */}

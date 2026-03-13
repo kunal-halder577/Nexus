@@ -1,4 +1,5 @@
 import { baseApi } from "@/lib/api/baseApi";
+import { current } from "@reduxjs/toolkit";
 
 export const postApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -120,11 +121,36 @@ export const postApi = baseApi.injectEndpoints({
         url: `/posts/${id}`,
         method: 'DELETE'
       }),
-      // FIX: Removed destructuring curly braces around 'id' 
-      invalidatesTags: (result, error, id) => [
-        { type: 'Post', id },
-        { type: 'Post', id: 'LIST' } // Deleting removes an item, so we DO want to refresh the list
-      ]
+      // ─── THE FIX: OPTIMISTIC UPDATE ─────────────────────────────────────────
+      async onQueryStarted(id, { dispatch, queryFulfilled }) {
+        // 1. Instantly remove the post from the cached feed list.
+        // Replace 'getPosts' with whatever your feed query is actually named!
+        const patchResult = dispatch(
+          postApi.util.updateQueryData('getFeedPosts', undefined, (draft) => {
+            // 1. Loop through every page of data you've fetched so far
+            draft.pages.forEach((page) => {
+              // 2. Safely check if the posts array exists on this page
+              if (page?.data?.data) {
+                // 3. Filter out the deleted post from this specific page's array
+                page.data.data = page.data.data.filter((post) => post._id !== id);
+              }
+            });
+          })
+        );
+
+        try {
+          // 2. Wait for the server to confirm the delete was successful
+          await queryFulfilled;
+        } catch {
+          // 3. If the server throws an error (e.g. network failure), undo the UI change
+          patchResult.undo();
+        }
+      },
+      // ──────────────────────────────────────────────────────────────────────
+      
+      // We ONLY invalidate the LIST now, just to keep pagination/sync clean in the background.
+      // We DO NOT invalidate the specific `{ type: 'Post', id }` anymore!
+      invalidatesTags: [{ type: 'Post', id: 'LIST' }] 
     }),
   }),
 })
