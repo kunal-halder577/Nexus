@@ -13,6 +13,8 @@ import { useSelector } from 'react-redux';
 import { selectCurrentUser } from '@/features/auth/authSlice';
 import { toast } from 'sonner';
 import PostActionMenu from './PostActionMenu.jsx';
+import { useEditPost } from '@/hooks/useEditPost.js';
+import EditPostModal from '@/components/Shared/EditPostModal.jsx';
 
 // ─── MIME type helper ─────────────────────────────────────────────────────────
 const EXTENSION_TO_MIME = {
@@ -178,6 +180,15 @@ const FeedPost = ({ post }) => {
   const [deletePost] = useDeletePostMutation();
   const [lightboxIndex, setLightboxIndex] = useState(null);
 
+  // ── Edit hook ──────────────────────────────────────────────────────────────
+  const {
+    isOpen:     editOpen,
+    openEditor: openEdit,
+    closeEditor: closeEdit,
+    submitEdit,
+    isLoading:  editLoading,
+  } = useEditPost(post);
+
   const isOwnPost = currentUser._id === post.author?._id;
 
   const libItems = useMemo(
@@ -204,7 +215,8 @@ const FeedPost = ({ post }) => {
     }
   }, [deletePost, navigate, post._id]);
 
-  const handleEdit   = useCallback(() => { /* TODO: open edit modal */ }, []);
+  // ── handleEdit now wired to openEdit ──────────────────────────────────────
+  const handleEdit   = useCallback(() => openEdit(), [openEdit]);
   const handleCopy   = useCallback(() => {
     navigator.clipboard.writeText(`${window.location.origin}/post/${post._id}`);
     toast.success("Link copied.");
@@ -221,9 +233,9 @@ const FeedPost = ({ post }) => {
 
   const menuActions = useMemo(() => [
     { label: 'Edit post',         onClick: handleEdit,   hidden: !isOwnPost },
-    { label: 'Delete post',   onClick: handleDelete, variant: 'destructive', hidden: !isOwnPost },
-    { label: 'Report post',   onClick: handleReport, variant: 'destructive', hidden: isOwnPost  },
-    { label: 'Block user',    onClick: () => {},     variant: 'warning',     hidden: isOwnPost  },
+    { label: 'Delete post',       onClick: handleDelete, variant: 'destructive', hidden: !isOwnPost },
+    { label: 'Report post',       onClick: handleReport, variant: 'destructive', hidden: isOwnPost  },
+    { label: 'Block user',        onClick: () => {},     variant: 'warning',     hidden: isOwnPost  },
     { type:  'separator',                                hidden: !isOwnPost },
     { label: 'Turn off comments', onClick: () => {},     hidden: !isOwnPost },
     { label: 'Bookmark',          onClick: () => {},     hidden: !isOwnPost },
@@ -361,11 +373,23 @@ const FeedPost = ({ post }) => {
         </div>
       </Card>
 
+      {/* ── Lightbox ── */}
       {lightboxIndex !== null && libItems.length > 0 && (
         <MediaLightbox
           items={libItems}
           startIndex={lightboxIndex}
           onClose={() => setLightboxIndex(null)}
+        />
+      )}
+
+      {/* ── Edit modal ── */}
+      {editOpen && (
+        <EditPostModal
+          post={post}
+          open={editOpen}
+          onClose={closeEdit}
+          onSubmit={submitEdit}
+          isLoading={editLoading}
         />
       )}
     </>

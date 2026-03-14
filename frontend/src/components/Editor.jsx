@@ -6,9 +6,9 @@ import Placeholder from '@tiptap/extension-placeholder';
 import CharacterCount from '@tiptap/extension-character-count';
 import Underline from '@tiptap/extension-underline';
 import { Bold, Italic, Underline as UnderlineIcon, Strikethrough } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-// Added 'content' to the props destructing
-export default function NexusEditor({ content, setContent, maxChars = 500 }) {
+export default function NexusEditor({ content, setContent, maxChars = 500, compact = false }) {
     const editor = useEditor({
         extensions: [
             StarterKit,
@@ -29,7 +29,12 @@ export default function NexusEditor({ content, setContent, maxChars = 500 }) {
         },
         editorProps: {
             attributes: {
-                class: 'w-full h-full outline-none p-2 md:p-4 text-xl md:text-2xl font-light leading-[1.8] tracking-wide text-foreground overflow-y-auto prose dark:prose-invert max-w-none scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent pr-2',
+                // CHANGED: Replaced `max-w-none` with `max-w-full`, added `break-words`, `whitespace-pre-wrap`, and `overflow-x-hidden`
+                class: cn('w-full outline-none p-2 md:p-4 leading-[1.8]         tracking-wide text-foreground',
+                    'prose dark:prose-invert !max-w-full break-words overflow-x-hidden',
+                    // ↓ compact mode for modal — normal post creation keeps the big size
+                    compact ? 'text-sm md:text-base' : 'text-xl md:text-2xl font-light',
+                ),
             },
         },
     });
@@ -46,7 +51,8 @@ export default function NexusEditor({ content, setContent, maxChars = 500 }) {
     }, [content, editor]);
 
     return (
-        <div className="w-full h-full relative custom-tiptap-wrapper">
+        // CHANGED: Added flex col, min-w-0, and overflow-x-hidden to strict-lock the width
+        <div className="w-full h-full min-w-0 flex flex-col relative custom-tiptap-wrapper overflow-x-hidden">
             {/* The Floating Bubble Menu */}
             {editor && (
                 <BubbleMenu 
@@ -100,7 +106,8 @@ export default function NexusEditor({ content, setContent, maxChars = 500 }) {
                 </BubbleMenu>
             )}
 
-            <EditorContent editor={editor} className="w-full h-full" />
+            {/* CHANGED: Added max-w-full and flex-1 to allow vertical growth but block horizontal expansion */}
+            <EditorContent editor={editor} className="w-full flex-1 max-w-full" />
         </div>
     );
 }

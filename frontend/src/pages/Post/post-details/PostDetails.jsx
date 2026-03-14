@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,7 @@ import PostCommentSection from './components/PostCommentSection';
 const PostDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const handleDeleteSuccess = useCallback(() => navigate('/'), [navigate]);
   const { data, isLoading, isError } = useGetPostByIdQuery(id);
 
   const post = data?.data;
@@ -39,7 +40,7 @@ const PostDetailPage = () => {
       <div className="max-w-2xl mx-auto px-4 py-5 flex flex-col gap-4">
 
         {/* ── AUTHOR ── */}
-        <PostAuthorHeader post={post} />
+        <PostAuthorHeader post={post} onDeleteSuccess={handleDeleteSuccess}/>
 
         {/* ── CAPTION ── */}
         {post.content?.caption && (
