@@ -7,8 +7,6 @@ import asyncHandler from "../utils/asyncHandler.js"
 import { deleteMultipleMedia, uploadMultipleMedia } from "../utils/cloudinary.js";
 import User from "../models/user.model.js";
 
-const AUTHOR_PUBLIC_FIELDS = 'name username avatarUrl';
-
 export const createPost = asyncHandler(async (req, res) => {
   const userId = req.user._id;
   const { caption, idempotentKey } = req.body;
@@ -111,6 +109,7 @@ export const createPost = asyncHandler(async (req, res) => {
 });
 export const getPostById = asyncHandler(async (req, res) => {
   const { id } = req.params;
+  const userId = req.user._id;
 
   if (!id) {
     throw new ApiError(400, "Post id is required.");
@@ -120,17 +119,74 @@ export const getPostById = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Invalid post id.");
   }
 
-  const post  = await Post.findById(id).populate('author', AUTHOR_PUBLIC_FIELDS);
+  const post = await Post.aggregate([
+    { $match: { _id: new mongoose.Types.ObjectId(id) } },
+    {
+      $lookup: {
+        from: 'likes',
+        let: { targetPostId: "$_id"},
+        pipeline: [
+          {
+            $match: { 
+              $expr: {
+                $and: [
+                  { $eq: ["$likableId", "$$targetPostId"] },
+                  { $eq: ["$user", new mongoose.Types.ObjectId(userId)] }
+                ]
+              }
+            }
+          }
+        ],
+        as: "userLikeStatus"   
+      }
+    },
+    {
+      $addFields: {
+        isLiked: { $gt: [{ $size: "$userLikeStatus"}, 0] }
+      }
+    },
+    {
+      $project: {
+        userLikeStatus: 0
+      }
+    },
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'author',
+        foreignField: '_id',
+        pipeline: [
+          {
+            $project: {
+              name: 1, 
+              avatarUrl: 1, 
+              username: 1
+            }
+          }
+        ],
+        as: 'author'
+      }
+    },
+    { 
+      $addFields: {
+        author: { 
+          $first: '$author' 
+        } 
+      } 
+    }
+  ]);
 
-  if(!post) throw new ApiError(404, "Post not found.");
+  if(!post?.length) throw new ApiError(404, "Post not found.");
 
   return res
   .status(200)
-  .json(new ApiResponse(200, "Post fetched successfully.", post));
+  .json(new ApiResponse(200, "Post fetched successfully.", post[0]));
 });
 export const getPosts = asyncHandler(async (req, res) => {
   const limit = Math.max(1, Math.min(parseInt(req.query.limit) || 10, 50));
-  const { cursorId, cursorCreatedAt }= req.query;
+  const { cursorId, cursorCreatedAt } = req.query;
+  
+  const currentUserId = req.user._id ? new mongoose.Types.ObjectId(req.user._id) : null;
 
   if (cursorId && !mongoose.Types.ObjectId.isValid(cursorId)) {
     throw new ApiError(400, "Invalid cursorId");
@@ -141,12 +197,9 @@ export const getPosts = asyncHandler(async (req, res) => {
 
   let query = {};
 
-  let cursorDate;
-  let cursorObjectId;
-
   if (cursorId && cursorCreatedAt) {
-    cursorDate = new Date(cursorCreatedAt);
-    cursorObjectId = new mongoose.Types.ObjectId(cursorId);
+    const cursorDate = new Date(cursorCreatedAt);
+    const cursorObjectId = new mongoose.Types.ObjectId(cursorId);
 
     query = {
       $or: [
@@ -159,15 +212,73 @@ export const getPosts = asyncHandler(async (req, res) => {
     };
   }
 
-  const posts = await Post.find(query)
-    .sort({ createdAt: -1, _id: -1 })
-    .limit(limit)
-    .populate('author', AUTHOR_PUBLIC_FIELDS)
-    .lean();
+  // Build the pipeline array dynamically
+  const pipeline = [
+    { $match: query },
+    { $sort: { createdAt: -1, _id: -1 } },
+    { $limit: limit },
+    
+    // 1. Join Author details (Replacing .populate)
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'author',
+        foreignField: '_id',
+        pipeline: [
+          {
+            $project: {
+              name: 1, 
+              avatarUrl: 1, 
+              username: 1
+            }
+          }
+        ],
+        as: 'author'
+      }
+    },
+    { $addFields: { author: { $first: '$author' } } },
+  ];
+
+  if (currentUserId) {
+    pipeline.push(
+      {
+        $lookup: {
+          from: 'likes',
+          let: { postId: '$_id' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$likableId', '$$postId'] },
+                    { $eq: ['$user', currentUserId] }
+                  ]
+                }
+              }
+            },
+            { $project: { _id: 1 } }
+          ],
+          as: 'userLike'
+        }
+      },
+      {
+        $addFields: {
+          isLiked: { $gt: [{ $size: '$userLike' }, 0] }
+        }
+      },
+      { $project: { userLike: 0 } }
+    );
+  } else {
+    pipeline.push({
+      $addFields: { isLiked: false }
+    });
+  }
+
+  const posts = await Post.aggregate(pipeline);
 
   const hasMore = posts.length === limit;
   const lastPost = posts[posts.length - 1];
-  const nextCursor = hasMore? {
+  const nextCursor = hasMore ? {
     cursorCreatedAt: lastPost.createdAt.toISOString(),
     cursorId: lastPost._id.toString()
   } : null;
@@ -180,12 +291,12 @@ export const getPosts = asyncHandler(async (req, res) => {
   return res
     .status(200)
     .json(new ApiResponse(200, "Posts fetched successfully.", response));
-
 });
 export const getUserPosts = asyncHandler(async (req, res) => {
   const limit = Math.max(1, Math.min(parseInt(req.query.limit) || 10, 50));
   const { cursorId, cursorCreatedAt } = req.query;
   const { userId } = req.params;
+  const currentUserId = req.user._id;
 
   if (!userId) throw new ApiError(400, "User id is required.");
   
@@ -204,26 +315,72 @@ export const getUserPosts = asyncHandler(async (req, res) => {
   const userExists = await User.exists({ _id: userId });
   if (!userExists) throw new ApiError(404, "User not found.");
 
-  let query = { author: userId };
+  let matchQuery = { author: new mongoose.Types.ObjectId(userId) };
 
   if (cursorId && cursorCreatedAt) {
-    const cursorDate = new Date(cursorCreatedAt);
-    const cursorObjectId = new mongoose.Types.ObjectId(cursorId);
-
-    query.$or = [
-      { createdAt: { $lt: cursorDate } },
-      {
-        createdAt: cursorDate,
-        _id: { $lt: cursorObjectId }
+    matchQuery.$or = [
+      { createdAt: { $lt: new Date(cursorCreatedAt) } },
+      { 
+        createdAt: new Date(cursorCreatedAt), 
+        _id: { $lt: new mongoose.Types.ObjectId(cursorId) } 
       }
     ];
   }
 
-  const posts = await Post.find(query)
-    .sort({ createdAt: -1, _id: -1 })
-    .limit(limit)
-    .populate('author', AUTHOR_PUBLIC_FIELDS)
-    .lean();
+  const posts = await Post.aggregate([
+    { $match: matchQuery },
+    { $sort: { createdAt: -1, _id: -1 } },
+    { $limit: limit },
+    
+    {
+      $lookup: {
+        from: "users",
+        localField: "author",
+        foreignField: "_id",
+        pipeline: [
+          {
+            $project: {
+              name: 1, 
+              avatarUrl: 1, 
+              username: 1
+            }
+          }
+        ],
+        as: "author"
+      }
+    },
+    { $addFields: { author: { $first: "$author" } } },
+    {
+      $lookup: {
+        from: "likes",
+        let: { postId: "$_id" },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $eq: ["$likableId", "$$postId"] },
+                  { $eq: ["$user", new mongoose.Types.ObjectId(currentUserId)] }
+                ]
+              }
+            }
+          }
+        ],
+        as: "userLike"
+      }
+    },
+
+    {
+      $addFields: {
+        isLiked: { $gt: [{ $size: "$userLike" }, 0] },
+      }
+    },
+    { 
+      $project: { 
+        userLike: 0 
+      } 
+    }
+  ]);
 
   const hasMore = posts.length === limit;
   const lastPost = posts[posts.length - 1];
@@ -239,7 +396,7 @@ export const getUserPosts = asyncHandler(async (req, res) => {
   };
 
   if (!cursorId && !cursorCreatedAt) {
-    response.totalPosts = await Post.countDocuments({ author: userId });
+    response.totalPosts = await Post.countDocuments({ author: new mongoose.Types.ObjectId(userId) });
   }
 
   return res
