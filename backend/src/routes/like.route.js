@@ -1,7 +1,7 @@
 import { Router } from "express";
-import { authCheck } from "../middlewares/auth.middleware";
-import { getCurrentUserLikedContent, getLikers, getUserLikedContent, toggleLike } from "../controllers/like.controller";
-import { normalizeLikableType } from "../middlewares/util.middleware";
+import { authCheck } from "../middlewares/auth.middleware.js";
+import { getCurrentUserLikedContent, getLikers, getUserLikedContent, toggleLike } from "../controllers/like.controller.js";
+import { normalizeLikableType } from "../middlewares/util.middleware.js";
 
 const router = Router();
 
@@ -20,3 +20,5 @@ router
   .route("/toggle/:likableType/:likableId")
   .post(authCheck, normalizeLikableType, toggleLike)
   .delete(authCheck, normalizeLikableType, toggleLike);
+
+export default router;
