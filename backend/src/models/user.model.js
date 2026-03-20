@@ -68,6 +68,18 @@ const userSchema = new Schema(
     avatarPublicId: {
       type: String,
     },
+    stats: {
+      followerCount: {
+        type: Number,
+        default: 0,
+        min: 0
+      },
+      followingCount: {
+        type: Number,
+        default: 0,
+        min: 0
+      }
+    },
     providers: {
       google: {
         id: { type: String },
@@ -140,6 +152,7 @@ userSchema.set('toJSON', {
       age: ret.age,
       name: ret.name,
       email: ret.email,
+      stats: ret.stats,
       gender: ret.gender,
       username: ret.username,
       avatarUrl: ret.avatarUrl,
@@ -155,6 +168,7 @@ userSchema.virtual('profile').get(function () {
     name: this.name,
     email: this.email,
     avatarUrl: this.avatarUrl,
+    stats: this.stats,
   };
 });
 
