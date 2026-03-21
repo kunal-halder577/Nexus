@@ -281,7 +281,7 @@ const FeedPost = ({ post }) => {
     { label: 'Copy link',         onClick: handleCopy  },
     { label: 'Share post',        onClick: handleShare },
     { type:  'separator',                                hidden: isOwnPost  },
-  ], [isOwnPost, handleEdit, handleDelete, handleSave, handleCopy, handleShare, handleReport]);
+  ], [isOwnPost, handleEdit, handleDelete, handleSave, handleCopy, handleShare, handleReport, isFollowing, handleFollowToggle]);
 
   return (
     <>
