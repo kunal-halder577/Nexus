@@ -26,6 +26,10 @@ app.use(helmet());
 app.use(rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 100,
+    skip: () => process.env.NODE_ENV === 'development',
+    message: 'Too many requests, please try again later.',
+    standardHeaders: true,
+    legacyHeaders: false,
 }))
 
 //utilities

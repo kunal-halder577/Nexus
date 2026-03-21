@@ -24,36 +24,37 @@ export const followUser = asyncHandler(async (req, res) => {
     }
 
     try {
-        const result = await Follow.findOneAndUpdate(
-            { followerId: currentUserId, followingId: targetUserId },
-            { 
-                $setOnInsert: { 
-                    followerId: currentUserId, 
-                    followingId: targetUserId 
-                } 
-            },
-            { upsert: true, new: true, runValidators: true, rawResult: true }
-        );
+    const result = await Follow.findOneAndUpdate(
+        { followerId: currentUserId, followingId: targetUserId },
+        { 
+            $setOnInsert: { 
+                followerId: currentUserId, 
+                followingId: targetUserId 
+            } 
+        },
+        { upsert: true, new: false } // new: false returns the ORIGINAL doc
+    );
 
-        if (result.lastErrorObject.updatedExisting) {
-            throw new ApiError(409, '[followUser] Already following.');
-        }
-
-        await Promise.all([
-            User.findByIdAndUpdate(targetUserId, { $inc: { "stats.followerCount": 1 } }),
-            User.findByIdAndUpdate(currentUserId, { $inc: { "stats.followingCount": 1 } })
-        ]);
-
-        return res
-            .status(201)
-            .json(new ApiResponse(201, 'Successfully followed user.', result.value));
-
-    } catch (err) {
-        if (err.code === 11000) {
-            throw new ApiError(409, '[followUser] Already following.');
-        }
-        throw err;
+    // If result is not null, the doc already existed → already following
+    if (result !== null) {
+        throw new ApiError(409, '[followUser] Already following.');
     }
+
+    await Promise.all([
+        User.findByIdAndUpdate(targetUserId, { $inc: { "stats.followerCount": 1 } }),
+        User.findByIdAndUpdate(currentUserId, { $inc: { "stats.followingCount": 1 } })
+    ]);
+
+    return res
+        .status(201)
+        .json(new ApiResponse(201, 'Successfully followed user.'));
+
+} catch (err) {
+    if (err.code === 11000) {
+        throw new ApiError(409, '[followUser] Already following.');
+    }
+    throw err;
+}
 });
 export const unfollowUser = asyncHandler(async (req, res) => {
     const { userId: targetUserId } = req.params;
@@ -83,8 +84,28 @@ export const unfollowUser = asyncHandler(async (req, res) => {
     }
 
     await Promise.all([
-        User.findByIdAndUpdate(targetUserId, { $inc: { "stats.followerCount": -1 } }),
-        User.findByIdAndUpdate(currentUserId, { $inc: { "stats.followingCount": -1 } })
+        User.updateOne(
+            { _id: targetUserId },
+            [{ 
+                $set: { 
+                    'stats.followerCount': { 
+                        $max: [0, { $subtract: ['$stats.followerCount', 1] }] 
+                    } 
+                } 
+            }],
+            { updatePipeline: true }
+        ),
+        User.updateOne(
+            { _id: currentUserId },
+            [{ 
+                $set: { 
+                    'stats.followingCount': { 
+                        $max: [0, { $subtract: ['$stats.followingCount', 1] }] 
+                    } 
+                } 
+            }],
+            { updatePipeline: true }
+        )
     ]);
 
     return res
