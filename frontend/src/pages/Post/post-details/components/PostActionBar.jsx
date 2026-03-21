@@ -7,7 +7,8 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { useUpdatePostMutation } from '@/features/post/api/postApi';
+import { useDislikePostMutation, useLikePostMutation } from '@/features/Like/api/likeApi';
+import { toast } from 'sonner';
 
 const ActionButton = ({ icon: Icon, label, onClick, active, activeClass, hoverClass, filled }) => (
   <Tooltip>
@@ -30,16 +31,29 @@ const ActionButton = ({ icon: Icon, label, onClick, active, activeClass, hoverCl
 );
 
 const PostActionBar = ({ post, onShareCopied }) => {
-  const [updatePost] = useUpdatePostMutation();
+  const [likePost]    = useLikePostMutation();
+  const [dislikePost] = useDislikePostMutation();
 
-  const handleLike = useCallback(() => {
-    const liked = post.hasLiked;
-    updatePost({
-      id: post._id,
-      hasLiked: !liked,
-      stats: { ...post.stats, likeCount: post.stats.likeCount + (liked ? -1 : 1) },
-    });
-  }, [post, updatePost]);
+  const handleLike = useCallback(async () => {
+    try {
+      await likePost(post._id).unwrap();
+    } catch (error) {
+      toast.error(error?.data?.message ?? "Something went wrong.");
+    }
+  }, [likePost, post._id]);
+
+  const handleDislike = useCallback(async () => {
+    try {
+      await dislikePost(post._id).unwrap();
+    } catch (error) {
+      toast.error(error?.data?.message ?? "Something went wrong.");
+    }
+  }, [dislikePost, post._id]);
+
+  const handleLikeToggler = useCallback(
+    (...args) => (post.isLiked ? handleDislike : handleLike)(...args),
+    [post.isLiked, handleLike, handleDislike]
+  );
 
   const handleSave = useCallback(() => {
     const saved = post.hasSaved;
@@ -47,7 +61,7 @@ const PostActionBar = ({ post, onShareCopied }) => {
     //   id: post._id,
     //   hasSaved: !saved,
     // });
-  }, [post, updatePost]);
+  }, [post]);
 
   const handleShare = useCallback(async () => {
     const url = window.location.href;
@@ -73,9 +87,9 @@ const PostActionBar = ({ post, onShareCopied }) => {
         <div className="flex items-center gap-1">
           <ActionButton
             icon={Heart}
-            label={post.hasLiked ? 'Unlike' : 'Like'}
-            onClick={handleLike}
-            active={post.hasLiked}
+            label={post.isLiked ? 'Unlike' : 'Like'}
+            onClick={handleLikeToggler}
+            active={post.isLiked}
             activeClass="text-rose-400 bg-rose-500/10 hover:bg-rose-500/20"
             hoverClass="hover:bg-rose-500/10 hover:text-rose-400"
             filled

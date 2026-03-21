@@ -78,6 +78,6 @@ export const baseApi = createApi({
   reducerPath: 'baseApi',
   baseQuery: baseQueryWithReAuth,
   // Define tags for caching invalidation
-  tagTypes: ["User", "Post", "Comment", "Notification", 'Followers', 'Following', 'FollowStatus'],
+  tagTypes: ["User", "Post", "Comment", "Notification", 'Followers', 'Following', 'FollowStatus', "PostLikers", "CommentLikers", "LikedContent"],
   endpoints: () => ({}),
 });

@@ -20,6 +20,7 @@ import {
   useUnfollowUserMutation,
   useGetFollowStatusQuery,
 } from '@/features/follow/api/followApi.js';
+import { useDislikePostMutation, useLikePostMutation } from '@/features/Like/api/likeApi';
 
 // ─── MIME type helper ─────────────────────────────────────────────────────────
 const EXTENSION_TO_MIME = {
@@ -181,33 +182,32 @@ const StatBtn = ({ icon: Icon, count, onClick, active, activeClass, hoverClass, 
 const FeedPost = ({ post }) => {
   const navigate    = useNavigate();
   const currentUser = useSelector(selectCurrentUser);
-  const [updatePost] = useUpdatePostMutation();
   const [deletePost] = useDeletePostMutation();
   const [lightboxIndex, setLightboxIndex] = useState(null);
 
-  // ── Edit hook ──────────────────────────────────────────────────────────────
   const {
-    isOpen:     editOpen,
-    openEditor: openEdit,
+    isOpen:      editOpen,
+    openEditor:  openEdit,
     closeEditor: closeEdit,
     submitEdit,
-    isLoading:  editLoading,
+    isLoading:   editLoading,
   } = useEditPost(post);
 
   const isOwnPost = currentUser._id === post.author?._id;
+  const authorId  = post.author?._id;
 
   const libItems = useMemo(
     () => (post.media?.length ? toLibItems(post.media) : []),
     [post.media]
   );
 
-  const authorId = post.author?._id;
-
   const { data: followStatusData } = useGetFollowStatusQuery(authorId, {
     skip: !authorId || isOwnPost,
   });
   const isFollowing = followStatusData?.data?.isFollowing ?? false;
 
+  const [likePost]    = useLikePostMutation();
+  const [dislikePost] = useDislikePostMutation();
   const [followUser]   = useFollowUserMutation();
   const [unfollowUser] = useUnfollowUserMutation();
 
@@ -215,72 +215,87 @@ const FeedPost = ({ post }) => {
     try {
       if (isFollowing) {
         await unfollowUser(authorId).unwrap();
-        toast.success('Unfollowed successfully.');
+        toast.success("Unfollowed successfully.");
       } else {
         await followUser(authorId).unwrap();
-        toast.success('Following!');
+        toast.success("Following!");
       }
     } catch {
-      toast.error('Something went wrong.');
+      toast.error("Something went wrong.");
     }
   }, [isFollowing, followUser, unfollowUser, authorId]);
 
-  const handleLike = useCallback(() => {
-    const liked = post.hasLiked;
-    updatePost({
-      id:       post._id,
-      hasLiked: !liked,
-      stats:    { ...post.stats, likeCount: post.stats.likeCount + (liked ? -1 : 1) },
-    });
-  }, [post, updatePost]);
+  // ✅ Fixed deps — removed toast, added post._id
+  const handleLike = useCallback(async () => {
+    try {
+      await likePost(post._id).unwrap();
+    } catch (error) {
+      toast.error(error?.data?.message ?? "Something went wrong.");
+    }
+  }, [likePost, post._id]);
 
+  // ✅ Fixed: was calling likePost — now correctly calls dislikePost
+  const handleDislike = useCallback(async () => {
+    try {
+      await dislikePost(post._id).unwrap();
+    } catch (error) {
+      toast.error(error?.data?.message ?? "Something went wrong.");
+    }
+  }, [dislikePost, post._id]);
+
+  // ✅ Memoized so StatBtn doesn't re-render on every cycle
+  const handleLikeToggler = useCallback(
+    (...args) => (post.isLiked ? handleDislike : handleLike)(...args),
+    [post.isLiked, handleLike, handleDislike]
+  );
+
+  // ✅ Fixed: passes { id, userId } so getUserPosts cache gets patched too
   const handleDelete = useCallback(async () => {
     try {
-      await deletePost(post._id).unwrap();
-      if (window.location.pathname.includes(post._id)) navigate('/');
+      await deletePost({ id: post._id }).unwrap();
+      if (window.location.pathname.includes(post._id)) navigate("/");
       toast.success("Post deleted successfully.");
     } catch {
       toast.error("Something went wrong while deleting post.");
     }
-  }, [deletePost, navigate, post._id]);
+  }, [deletePost, navigate, post._id, authorId]);
 
-  // ── handleEdit now wired to openEdit ──────────────────────────────────────
   const handleEdit   = useCallback(() => openEdit(), [openEdit]);
   const handleCopy   = useCallback(() => {
     navigator.clipboard.writeText(`${window.location.origin}/post/${post._id}`);
     toast.success("Link copied.");
   }, [post._id]);
-  const handleShare  = useCallback(() => { /* TODO: share sheet */ }, []);
-  const handleReport = useCallback(() => { /* TODO: report flow */ }, []);
-  const handleSave   = useCallback(() => { /* TODO: save post  */ }, []);
+  const handleShare  = useCallback(() => { /* TODO */ }, []);
+  const handleReport = useCallback(() => { /* TODO */ }, []);
+  const handleSave   = useCallback(() => { /* TODO */ }, []);
 
-  const openPost     = () => navigate(`/post/${post._id}`);
+  const openPost     = useCallback(() => navigate(`/post/${post._id}`), [navigate, post._id]);
   const openLightbox = useCallback((idx) => setLightboxIndex(idx), []);
 
   const formattedTime = formatTime(post.createdAt);
-  const authorInitial = post.author?.name?.[0]?.toUpperCase() ?? '?';
+  const authorInitial = post.author?.name?.[0]?.toUpperCase() ?? "?";
 
   const menuActions = useMemo(() => [
-    { label: 'Edit post',         onClick: handleEdit,   hidden: !isOwnPost },
-    { label: 'Delete post',       onClick: handleDelete, variant: 'destructive', hidden: !isOwnPost },
-    { label: 'Report post',       onClick: handleReport, variant: 'destructive', hidden: isOwnPost  },
-    { label: 'Block user',        onClick: () => {},     variant: 'warning',     hidden: isOwnPost  },
-    { type:  'separator',                                hidden: !isOwnPost },
-    { label: 'Turn off comments', onClick: () => {},     hidden: !isOwnPost },
-    { label: 'Bookmark',          onClick: () => {},     hidden: !isOwnPost },
-    { label: 'Save post',         onClick: handleSave,   hidden: isOwnPost  },
-    { label: 'Bookmark',          onClick: () => {},     hidden: isOwnPost  },
-    { type:  'separator' },
-    { label: 'Hide post',         onClick: () => {},     hidden: isOwnPost  },
-    { 
-      label: isFollowing ? 'Unfollow user' : 'Follow user',
+    { label: "Edit post",         onClick: handleEdit,   hidden: !isOwnPost },
+    { label: "Delete post",       onClick: handleDelete, variant: "destructive", hidden: !isOwnPost },
+    { label: "Report post",       onClick: handleReport, variant: "destructive", hidden: isOwnPost  },
+    { label: "Block user",        onClick: () => {},     variant: "warning",     hidden: isOwnPost  },
+    { type:  "separator",                                hidden: !isOwnPost },
+    { label: "Turn off comments", onClick: () => {},     hidden: !isOwnPost },
+    { label: "Bookmark",          onClick: () => {},     hidden: !isOwnPost },
+    { label: "Save post",         onClick: handleSave,   hidden: isOwnPost  },
+    { label: "Bookmark",          onClick: () => {},     hidden: isOwnPost  },
+    { type:  "separator" },
+    { label: "Hide post",         onClick: () => {},     hidden: isOwnPost  },
+    {
+      label:   isFollowing ? "Unfollow user" : "Follow user",
       onClick: handleFollowToggle,
-      hidden: isOwnPost,
+      hidden:  isOwnPost,
     },
-    { type:  'separator' },
-    { label: 'Copy link',         onClick: handleCopy  },
-    { label: 'Share post',        onClick: handleShare },
-    { type:  'separator',                                hidden: isOwnPost  },
+    { type:  "separator" },
+    { label: "Copy link",  onClick: handleCopy  },
+    { label: "Share post", onClick: handleShare },
+    { type:  "separator",  hidden: isOwnPost    },
   ], [isOwnPost, handleEdit, handleDelete, handleSave, handleCopy, handleShare, handleReport, isFollowing, handleFollowToggle]);
 
   return (
@@ -288,20 +303,19 @@ const FeedPost = ({ post }) => {
       <Card
         onClick={openPost}
         onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
+          if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
             openPost();
           }
         }}
         role="article"
         tabIndex={0}
-        aria-label={`Post by ${post.author?.name ?? 'unknown'}`}
+        aria-label={`Post by ${post.author?.name ?? "unknown"}`}
         className="mb-3 group/card relative border border-border/40 bg-card/50
           hover:bg-muted/20 hover:border-indigo-500/20 rounded-2xl overflow-hidden
           shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer
           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/50"
       >
-        {/* Left accent bar */}
         <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-indigo-500
           opacity-0 group-hover/card:opacity-100 transition-opacity z-10" />
 
@@ -318,7 +332,7 @@ const FeedPost = ({ post }) => {
             <div className="flex flex-col min-w-0">
               <div className="flex items-center gap-1.5 flex-wrap">
                 <span
-                  onClick={(e) => { e.stopPropagation(); navigate(`/profile/users/${post.author?._id}`); }}
+                  onClick={(e) => { e.stopPropagation(); navigate(`/profile/users/${authorId}`); }}
                   className="font-semibold text-[15px] text-foreground group-hover/card:text-indigo-500
                     dark:group-hover/card:text-indigo-400 transition-colors cursor-pointer leading-tight"
                 >
@@ -334,7 +348,7 @@ const FeedPost = ({ post }) => {
               </div>
               <div className="flex items-center gap-1 text-[13px] text-muted-foreground leading-tight">
                 <span
-                  onClick={(e) => { e.stopPropagation(); navigate(`/profile/users/${post.author?._id}`); }}
+                  onClick={(e) => { e.stopPropagation(); navigate(`/profile/users/${authorId}`); }}
                   className="hover:text-foreground cursor-pointer transition-colors truncate max-w-[140px]"
                 >
                   @{post.author?.username}
@@ -375,8 +389,8 @@ const FeedPost = ({ post }) => {
             <StatBtn
               icon={Heart}
               count={post.stats?.likeCount}
-              onClick={handleLike}
-              active={post.hasLiked}
+              onClick={handleLikeToggler}
+              active={post.isLiked}
               activeClass="text-rose-400 bg-rose-500/10"
               hoverClass="hover:bg-rose-500/10 hover:text-rose-400"
               filled
@@ -406,7 +420,6 @@ const FeedPost = ({ post }) => {
         </div>
       </Card>
 
-      {/* ── Lightbox ── */}
       {lightboxIndex !== null && libItems.length > 0 && (
         <MediaLightbox
           items={libItems}
@@ -415,7 +428,6 @@ const FeedPost = ({ post }) => {
         />
       )}
 
-      {/* ── Edit modal ── */}
       {editOpen && (
         <EditPostModal
           post={post}

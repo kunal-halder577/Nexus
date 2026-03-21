@@ -67,19 +67,10 @@ const PostAuthorHeader = ({ post, onDeleteSuccess }) => {
       toast.error('Something went wrong.');
     }
   }, [isFollowing, followUser, unfollowUser, authorId]);
-  const handleLike = useCallback(() => {
-    /* Just a Temporary Placeholder */
-    const liked = post.hasLiked;
-    updatePost({
-      id:       post._id,
-      hasLiked: !liked,
-      stats:    { ...post.stats, likeCount: post.stats.likeCount + (liked ? -1 : 1) },
-    });
-  }, [post, updatePost]);
 
   const handleDelete = useCallback(async () => {
     try {
-      await deletePost(post._id).unwrap();
+      await deletePost({id: post._id}).unwrap();
       if (onDeleteSuccess) onDeleteSuccess();
       toast.success("Post deleted successfully.");
     } catch {
