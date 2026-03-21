@@ -15,6 +15,11 @@ import { toast } from 'sonner';
 import PostActionMenu from './PostActionMenu.jsx';
 import { useEditPost } from '@/hooks/useEditPost.js';
 import EditPostModal from '@/components/Shared/EditPostModal.jsx';
+import {
+  useFollowUserMutation,
+  useUnfollowUserMutation,
+  useGetFollowStatusQuery,
+} from '@/features/follow/api/followApi.js';
 
 // ─── MIME type helper ─────────────────────────────────────────────────────────
 const EXTENSION_TO_MIME = {
@@ -196,6 +201,30 @@ const FeedPost = ({ post }) => {
     [post.media]
   );
 
+  const authorId = post.author?._id;
+
+  const { data: followStatusData } = useGetFollowStatusQuery(authorId, {
+    skip: !authorId || isOwnPost,
+  });
+  const isFollowing = followStatusData?.data?.isFollowing ?? false;
+
+  const [followUser]   = useFollowUserMutation();
+  const [unfollowUser] = useUnfollowUserMutation();
+
+  const handleFollowToggle = useCallback(async () => {
+    try {
+      if (isFollowing) {
+        await unfollowUser(authorId).unwrap();
+        toast.success('Unfollowed successfully.');
+      } else {
+        await followUser(authorId).unwrap();
+        toast.success('Following!');
+      }
+    } catch {
+      toast.error('Something went wrong.');
+    }
+  }, [isFollowing, followUser, unfollowUser, authorId]);
+
   const handleLike = useCallback(() => {
     const liked = post.hasLiked;
     updatePost({
@@ -243,7 +272,11 @@ const FeedPost = ({ post }) => {
     { label: 'Bookmark',          onClick: () => {},     hidden: isOwnPost  },
     { type:  'separator' },
     { label: 'Hide post',         onClick: () => {},     hidden: isOwnPost  },
-    { label: 'Unfollow user',     onClick: () => {},     hidden: isOwnPost  },
+    { 
+      label: isFollowing ? 'Unfollow user' : 'Follow user',
+      onClick: handleFollowToggle,
+      hidden: isOwnPost,
+    },
     { type:  'separator' },
     { label: 'Copy link',         onClick: handleCopy  },
     { label: 'Share post',        onClick: handleShare },

@@ -11,6 +11,11 @@ import { useSelector } from 'react-redux';
 import { toast } from 'sonner';
 import { useEditPost } from '@/hooks/useEditPost';
 import EditPostModal from '@/components/Shared/EditPostModal';
+import {
+  useFollowUserMutation,
+  useUnfollowUserMutation,
+  useGetFollowStatusQuery,
+} from '@/features/follow/api/followApi';
 
 const formatRelativeTime = (dateString) => {
   if (!dateString) return null;
@@ -39,7 +44,29 @@ const PostAuthorHeader = ({ post, onDeleteSuccess }) => {
     isLoading:  editLoading,
   } = useEditPost(post);
   const isOwnPost = currentUser?._id === post.author?._id;
+  
+  const authorId = post.author?._id;
+  const { data: followStatusData } = useGetFollowStatusQuery(authorId, {
+    skip: !authorId || isOwnPost,
+  });
+  const isFollowing = followStatusData?.data?.isFollowing ?? false;
 
+  const [followUser]   = useFollowUserMutation();
+  const [unfollowUser] = useUnfollowUserMutation();
+
+  const handleFollowToggle = useCallback(async () => {
+    try {
+      if (isFollowing) {
+        await unfollowUser(authorId).unwrap();
+        toast.success('Unfollowed successfully.');
+      } else {
+        await followUser(authorId).unwrap();
+        toast.success('Following!');
+      }
+    } catch {
+      toast.error('Something went wrong.');
+    }
+  }, [isFollowing, followUser, unfollowUser, authorId]);
   const handleLike = useCallback(() => {
     /* Just a Temporary Placeholder */
     const liked = post.hasLiked;
@@ -81,7 +108,11 @@ const PostAuthorHeader = ({ post, onDeleteSuccess }) => {
     { label: 'Bookmark',          onClick: () => {},     hidden: isOwnPost  },
     { type:  'separator' },
     { label: 'Hide post',         onClick: () => {},     hidden: isOwnPost  },
-    { label: 'Unfollow user',     onClick: () => {},     hidden: isOwnPost  },
+    { 
+      label: isFollowing ? 'Unfollow user' : 'Follow user',
+      onClick: handleFollowToggle,
+      hidden: isOwnPost,
+    },
     { type:  'separator' },
     { label: 'Copy link',         onClick: handleCopy  },
     { label: 'Share post',        onClick: handleShare },
