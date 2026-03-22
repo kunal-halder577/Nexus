@@ -13,7 +13,8 @@ const FeedView = ({
     isError,
     hasNextPage,
     fetchNextPage,
-    onCreatePost
+    onCreatePost,
+    emptyState,
 }) => {
 
   return (
@@ -70,6 +71,7 @@ const FeedView = ({
         isLoading={isLoading}
         hasNextPage={hasNextPage}
         fetchNextPage={fetchNextPage}
+        emptyState={emptyState}
       />
     </div>
   );

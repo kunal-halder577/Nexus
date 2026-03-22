@@ -1,5 +1,5 @@
 import FeedPost from '@/features/post/components/FeedPost';
-import { Loader2 } from 'lucide-react';
+import { FileText, Loader2 } from 'lucide-react';
 import { useEffect } from 'react';
 import { useInView } from 'react-intersection-observer';
 
@@ -10,6 +10,7 @@ const Feed = ({
     isError,
     hasNextPage,
     fetchNextPage,
+    emptyState,
 }) => {
   const { ref: sentinelRef, inView } = useInView({
     rootMargin: '200px', 
@@ -31,7 +32,15 @@ const Feed = ({
     );
   }
 
-  
+  // Inside Feed, wherever you currently handle the empty case:
+  if (!isLoading && posts.length === 0) {
+    return emptyState ?? (
+      <div className="flex flex-col items-center justify-center py-20 text-muted-foreground gap-3">
+        <FileText className="h-10 w-10 opacity-20" />
+        <p className="text-sm font-medium">No posts yet.</p>
+      </div>
+    );
+  }
   return (
     <div className="flex flex-col w-full h-full pb-20">
       {/* ==================== 3. POST LIST ==================== */}

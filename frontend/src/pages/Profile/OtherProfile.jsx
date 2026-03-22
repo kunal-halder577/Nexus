@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import ReactDOM from 'react-dom';
+import React, { useState, useCallback } from 'react';
 import {
   MapPin,
   Link as LinkIcon,
@@ -12,7 +11,7 @@ import {
   UserPlus,
   UserCheck,
   MessageCircle,
-  X,
+  FileText,
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -30,79 +29,74 @@ import {
   useUnfollowUserMutation,
 } from '@/features/follow/api/followApi';
 import { toast } from 'sonner';
+import FollowersModal from './FollowersModal';
+import AvatarLightbox from './AvatarLightbox';
 
-// ─── Avatar Lightbox (rendered in a portal so fixed positioning is safe) ───────
-function AvatarLightbox({ src, fallback, name, onClose }) {
-  useEffect(() => {
-    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
-    document.body.style.overflow = 'hidden';
-    if (scrollbarWidth > 0) {
-      document.body.style.paddingRight = `${scrollbarWidth}px`;
-    }
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.body.style.overflow = '';
-      document.body.style.paddingRight = '';
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [onClose]);
-
-  return ReactDOM.createPortal(
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center"
-      onClick={onClose}
+// ─── Stat button — accessible, no layout shift on label change ────────────────
+function StatButton({ count, label, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      aria-label={`${count} ${label} — click to view list`}
+      className={cn(
+        'w-20 shrink-0 text-center sm:text-left',
+        'rounded-lg py-1 -my-1 px-1 -mx-1',
+        'hover:opacity-80 transition-opacity',
+        'focus-visible:outline-none focus-visible:ring-2',
+        'focus-visible:ring-indigo-500 focus-visible:ring-offset-2 cursor-pointer'
+      )}
     >
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-2xl backdrop-saturate-150" />
+      <span className="block font-bold text-lg text-foreground tabular-nums leading-tight">
+        {count}
+      </span>
+      <span className="block text-xs text-muted-foreground uppercase tracking-wide font-medium min-w-[4rem]">
+        {label}
+      </span>
+    </button>
+  );
+}
 
-      <button
-        className="absolute top-4 right-4 z-10 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 p-2 text-white transition-colors"
-        onClick={onClose}
-        aria-label="Close"
-      >
-        <X className="h-5 w-5" />
-      </button>
+// ─── Empty tab state ──────────────────────────────────────────────────────────
+function EmptyTab({ icon: Icon, message }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-20 text-muted-foreground gap-3">
+      <Icon className="h-10 w-10 opacity-20" />
+      <p className="text-sm font-medium">{message}</p>
+    </div>
+  );
+}
 
-      <div
-        className="relative z-10 flex flex-col items-center gap-3"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {src ? (
-          <img
-            src={src}
-            alt={name || 'Profile picture'}
-            className="rounded-full w-72 h-72 sm:w-96 sm:h-96 object-cover shadow-2xl ring-4 ring-white/20"
-            style={{ animation: 'lightboxPop 0.2s cubic-bezier(0.34,1.56,0.64,1) both' }}
-          />
-        ) : (
-          <div
-            className="rounded-full w-72 h-72 sm:w-96 sm:h-96 bg-muted flex items-center justify-center text-8xl font-bold text-muted-foreground shadow-2xl ring-4 ring-white/20"
-            style={{ animation: 'lightboxPop 0.2s cubic-bezier(0.34,1.56,0.64,1) both' }}
-          >
-            {fallback}
-          </div>
-        )}
-        <p className="text-white/80 text-sm font-medium tracking-wide">{name || 'User'}</p>
-      </div>
-
-      <style>{`
-        @keyframes lightboxPop {
-          from { opacity: 0; transform: scale(0.85); }
-          to   { opacity: 1; transform: scale(1); }
-        }
-      `}</style>
-    </div>,
-    document.body
+// ─── Tab button sub-component ─────────────────────────────────────────────────
+function TabButton({ id, active, onClick, icon, label }) {
+  return (
+    <button
+      role="tab"
+      id={`tab-${id}`}
+      aria-selected={active}
+      aria-controls={`tabpanel-${id}`}
+      onClick={onClick}
+      className={cn(
+        'flex-1 pb-3 pt-2 text-sm font-medium transition-all relative cursor-pointer',
+        active ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
+      )}
+    >
+      <span className="flex items-center justify-center gap-2">
+        {icon}
+        {label}
+      </span>
+      {active && (
+        <span className="absolute bottom-0 left-0 w-full h-[2px] bg-indigo-600 rounded-t-full" />
+      )}
+    </button>
   );
 }
 
 // ─── Main Component ────────────────────────────────────────────────────────────
 export default function OtherUserProfile() {
   const { id } = useParams();
-  const [activeTab, setActiveTab] = useState('posts');
-  const [avatarOpen, setAvatarOpen] = useState(false);
+  const [activeTab, setActiveTab]     = useState('posts');
+  const [avatarOpen, setAvatarOpen]   = useState(false);
+  const [followModal, setFollowModal] = useState(null); // null | 'followers' | 'following'
   const [isJustFollowed, setIsJustFollowed] = useState(false);
   const [followParticles, setFollowParticles] = useState([]);
 
@@ -113,25 +107,21 @@ export default function OtherUserProfile() {
   const [followUser, { isLoading: isFollowingLoading }] = useFollowUserMutation();
   const [unfollowUser, { isLoading: isUnfollowingLoading }] = useUnfollowUserMutation();
 
-  const currentUser = useSelector(selectCurrentUser);
-  const isOwnProfile = id === currentUser?._id;
-
-  // Derive follow state from the nested query shape:
-  // { success, msg, data: { isFollowing, status } }
-  const isFollowing = isFollowingData?.data?.isFollowing ?? false;
+  const currentUser    = useSelector(selectCurrentUser);
+  const isOwnProfile   = id === currentUser?._id;
+  const isFollowing    = isFollowingData?.data?.isFollowing ?? false;
   const isFollowActionPending = isFollowingLoading || isUnfollowingLoading;
 
   // ─── Follow handler ──────────────────────────────────────────────────────────
   const handleFollow = useCallback(async () => {
     try {
       await followUser(id).unwrap();
-      // ── Spawn 6 hearts with varied size, horizontal drift & timing ──────────
       const HEART_COLORS = ['#f472b6','#fb7185','#e879f9','#f9a8d4','#c084fc','#ff6b8a'];
-      const SWAYS        = [-10, 6, -4, 8, -7, 3];      // horizontal drift (px)
+      const SWAYS        = [-10, 6, -4, 8, -7, 3];
       const SIZES        = ['11px','9px','13px','8px','11px','10px'];
-      const DELAYS       = [0, 120, 60, 200, 90, 160];   // stagger (ms)
+      const DELAYS       = [0, 120, 60, 200, 90, 160];
       const DURATIONS    = [1100, 1300, 1050, 1400, 1150, 1250];
-      const OFFSETS      = [-22, -8, 4, 16, -14, 26];   // left offset from center
+      const OFFSETS      = [-22, -8, 4, 16, -14, 26];
 
       setFollowParticles(
         Array.from({ length: 6 }, (_, i) => ({
@@ -166,17 +156,13 @@ export default function OtherUserProfile() {
   const handleFollowToggle = isFollowing ? handleUnfollow : handleFollow;
 
   // ─── Derived helpers ─────────────────────────────────────────────────────────
-  const avatarSrc = user?.avatarUrl || '';
+  const avatarSrc      = user?.avatarUrl || '';
   const avatarFallback = user?.name?.charAt(0)?.toUpperCase() || 'U';
-
-  const followerCount = user?.stats?.followerCount ?? 0;
-  const followerLabel = followerCount === 1 ? 'Follower' : 'Followers';
+  const followerCount  = user?.stats?.followerCount ?? 0;
+  const followerLabel  = followerCount === 1 ? 'Follower' : 'Followers';
 
   const joinDate = user?.createdAt
-    ? new Date(user.createdAt).toLocaleDateString('en-GB', {
-        month: 'long',
-        year: 'numeric',
-      })
+    ? new Date(user.createdAt).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })
     : 'recently';
 
   // ─── Loading state ───────────────────────────────────────────────────────────
@@ -207,13 +193,23 @@ export default function OtherUserProfile() {
 
   return (
     <div className="min-h-screen bg-background text-foreground pb-20">
-      {/* Avatar lightbox — rendered in a portal to avoid fixed-positioning issues */}
+
+      {/* AvatarLightbox — portal, owns scroll-lock + Escape */}
       {avatarOpen && (
         <AvatarLightbox
           src={avatarSrc}
           fallback={avatarFallback}
           name={user?.name}
           onClose={() => setAvatarOpen(false)}
+        />
+      )}
+
+      {/* FollowersModal — portal, owns scroll-lock + Escape */}
+      {followModal && (
+        <FollowersModal
+          userId={user._id}
+          initialTab={followModal}
+          onClose={() => setFollowModal(null)}
         />
       )}
 
@@ -224,10 +220,7 @@ export default function OtherUserProfile() {
 
           {/* Banner */}
           <div className="h-48 w-full relative overflow-hidden">
-            {/* Base gradient — always visible whether or not a bannerUrl exists */}
             <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-700" />
-
-            {/* Soft glow blobs for depth */}
             <div
               className="absolute inset-0 opacity-50"
               style={{
@@ -236,15 +229,12 @@ export default function OtherUserProfile() {
                   'radial-gradient(ellipse at 80% 20%, rgba(99,102,241,0.6) 0%, transparent 50%)',
               }}
             />
-
-            {/* User banner image — overlaid on top if provided */}
             {user.bannerUrl && (
               <div
                 className="absolute inset-0 bg-cover bg-center opacity-60 transition-opacity"
                 style={{ backgroundImage: `url('${user.bannerUrl}')` }}
               />
             )}
-
             {user.isPremium && (
               <div className="absolute top-4 right-4">
                 <Badge className="bg-black/30 text-white backdrop-blur-md border-white/10">
@@ -263,7 +253,7 @@ export default function OtherUserProfile() {
                 className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 group"
                 aria-label="View profile picture"
               >
-                <Avatar className="h-32 w-32 border border-border/50 bg-background transition-all group-hover:ring-2 group-hover:ring-ring group-hover:ring-offset-1 group-hover:brightness-90">
+                <Avatar className="h-32 w-32 border border-border/50 bg-background transition-all group-hover:ring-2 group-hover:ring-ring group-hover:ring-offset-1 group-hover:brightness-90 cursor-pointer">
                   <AvatarImage src={avatarSrc} alt={user?.name || 'User avatar'} />
                   <AvatarFallback className="text-4xl">{avatarFallback}</AvatarFallback>
                 </Avatar>
@@ -290,14 +280,10 @@ export default function OtherUserProfile() {
                   <>
                     {/*
                       ── Follow / Unfollow button ──────────────────────────────
-                      Layout: fixed w-32, three absolute label layers — no reflow.
-                      Animation on follow: 6 hearts float upward from the button,
-                      each slightly different in size, drift, and delay so they
-                      feel organic rather than mechanical. No shimmer, no ring,
-                      no squish — deliberately quiet.
+                      Fixed w-32 with three absolute label layers — no reflow.
+                      6 hearts float on follow, organic stagger, no ring/squish.
                     */}
                     <div className="relative shrink-0" style={{ isolation: 'isolate' }}>
-
                       {followParticles.map((p) => (
                         <span
                           key={p.id}
@@ -331,38 +317,29 @@ export default function OtherUserProfile() {
                             : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-md shadow-indigo-500/20'
                         )}
                       >
-                        {/* Layer 0 — skeleton (initial follow status not yet known) */}
-                        <span
-                          className={cn(
-                            'absolute inset-0 flex items-center justify-center transition-opacity duration-150',
-                            isLoadingFollowStatus ? 'opacity-100' : 'opacity-0 pointer-events-none'
-                          )}
-                        >
+                        {/* Layer 0 — skeleton while follow status loads */}
+                        <span className={cn(
+                          'absolute inset-0 flex items-center justify-center transition-opacity duration-150',
+                          isLoadingFollowStatus ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                        )}>
                           <span className="h-3.5 w-3.5 rounded-full border-2 border-current border-t-transparent animate-spin" />
                         </span>
 
-                        {/* Layer 1 — "Follow" (not yet following, idle, status known) */}
-                        <span
-                          className={cn(
-                            'absolute inset-0 flex items-center justify-center gap-1.5 transition-opacity duration-150',
-                            !isFollowing && !isFollowActionPending && !isLoadingFollowStatus
-                              ? 'opacity-100'
-                              : 'opacity-0 pointer-events-none'
-                          )}
-                        >
-                          <UserPlus className="w-4 h-4" />
-                          Follow
+                        {/* Layer 1 — Follow (not following, idle) */}
+                        <span className={cn(
+                          'absolute inset-0 flex items-center justify-center gap-1.5 transition-opacity duration-150',
+                          !isFollowing && !isFollowActionPending && !isLoadingFollowStatus
+                            ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                        )}>
+                          <UserPlus className="w-4 h-4" /> Follow
                         </span>
 
-                        {/* Layer 2 — "Following" (following, idle, status known) */}
-                        <span
-                          className={cn(
-                            'absolute inset-0 flex items-center justify-center gap-1.5 transition-opacity duration-150',
-                            isFollowing && !isFollowActionPending && !isLoadingFollowStatus
-                              ? 'opacity-100'
-                              : 'opacity-0 pointer-events-none'
-                          )}
-                        >
+                        {/* Layer 2 — Following (following, idle) */}
+                        <span className={cn(
+                          'absolute inset-0 flex items-center justify-center gap-1.5 transition-opacity duration-150',
+                          isFollowing && !isFollowActionPending && !isLoadingFollowStatus
+                            ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                        )}>
                           <UserCheck
                             className="w-4 h-4"
                             style={isJustFollowed
@@ -372,15 +349,11 @@ export default function OtherUserProfile() {
                           Following
                         </span>
 
-                        {/* Layer 3 — spinner (follow/unfollow action in flight) */}
-                        <span
-                          className={cn(
-                            'absolute inset-0 flex items-center justify-center gap-1.5 transition-opacity duration-150',
-                            isFollowActionPending
-                              ? 'opacity-100'
-                              : 'opacity-0 pointer-events-none'
-                          )}
-                        >
+                        {/* Layer 3 — spinner (action in flight) */}
+                        <span className={cn(
+                          'absolute inset-0 flex items-center justify-center gap-1.5 transition-opacity duration-150',
+                          isFollowActionPending ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                        )}>
                           <span className="h-3.5 w-3.5 rounded-full border-2 border-current border-t-transparent animate-spin" />
                           {isFollowing ? 'Unfollowing…' : 'Following…'}
                         </span>
@@ -388,15 +361,15 @@ export default function OtherUserProfile() {
 
                       <style>{`
                         @keyframes heartFloat {
-                          0%   { transform: translateY(0)    translateX(0)               scale(0.4); opacity: 0;   }
+                          0%   { transform: translateY(0) translateX(0) scale(0.4); opacity: 0; }
                           10%  { opacity: 0.85; }
-                          45%  { transform: translateY(-38px) translateX(var(--sway, 4px)) scale(1);   opacity: 0.8; }
-                          100% { transform: translateY(-90px) translateX(0)               scale(0.6); opacity: 0;   }
+                          45%  { transform: translateY(-38px) translateX(var(--sway, 4px)) scale(1); opacity: 0.8; }
+                          100% { transform: translateY(-90px) translateX(0) scale(0.6); opacity: 0; }
                         }
                         @keyframes heartIconPop {
                           0%   { transform: scale(0.5); opacity: 0; }
                           65%  { transform: scale(1.12); opacity: 1; }
-                          100% { transform: scale(1);    opacity: 1; }
+                          100% { transform: scale(1); opacity: 1; }
                         }
                       `}</style>
                     </div>
@@ -436,10 +409,11 @@ export default function OtherUserProfile() {
             </div>
 
             {/* Bio */}
-            <p className="mt-4 text-sm leading-relaxed max-w-2xl whitespace-pre-line text-muted-foreground/90">
-              {user.bio ||
-                'Digital Architect & Visual Storyteller. Creating premium experiences on the Nexus platform. ✦'}
-            </p>
+            {user.bio && (
+              <p className="mt-4 text-sm leading-relaxed max-w-2xl whitespace-pre-line text-muted-foreground/90">
+                {user.bio}
+              </p>
+            )}
 
             {/* Metadata */}
             <div className="flex flex-wrap gap-4 mt-4 text-sm text-muted-foreground">
@@ -449,7 +423,6 @@ export default function OtherUserProfile() {
                   <span>{user.location}</span>
                 </div>
               )}
-
               {(user.website || user.username) && (
                 <div className="flex items-center gap-1 hover:text-indigo-500 transition-colors">
                   <LinkIcon className="h-3.5 w-3.5" />
@@ -463,42 +436,30 @@ export default function OtherUserProfile() {
                   </a>
                 </div>
               )}
-
               <div className="flex items-center gap-1">
                 <Calendar className="h-3.5 w-3.5" />
                 <span>Joined {joinDate}</span>
               </div>
             </div>
 
-            {/* Stats
-                Two sources of shift fixed:
-                1. w-20/w-24 on each block so label changes ("Follower" vs "Followers")
-                   can't push siblings sideways.
-                2. tabular-nums on counts so every digit occupies the same width —
-                   9→10 or 99→100 never resizes the number span.
-            */}
+            {/* Stats — <StatButton> for a11y on clickable ones */}
             <div className="flex gap-6 mt-6 pt-6 border-t border-border/50">
-              <div className="w-20 shrink-0 text-center sm:text-left cursor-pointer hover:opacity-80 transition-opacity">
-                <span className="block font-bold text-lg text-foreground tabular-nums">
-                  {followerCount}
-                </span>
-                <span className="text-xs text-muted-foreground uppercase tracking-wide font-medium">
-                  {followerLabel}
-                </span>
-              </div>
-              <div className="w-20 shrink-0 text-center sm:text-left cursor-pointer hover:opacity-80 transition-opacity">
-                <span className="block font-bold text-lg text-foreground tabular-nums">
-                  {user.stats?.followingCount ?? 0}
-                </span>
-                <span className="text-xs text-muted-foreground uppercase tracking-wide font-medium">
-                  Following
-                </span>
-              </div>
+              <StatButton
+                count={followerCount}
+                label={followerLabel}
+                onClick={() => setFollowModal('followers')}
+              />
+              <StatButton
+                count={user.stats?.followingCount ?? 0}
+                label="Following"
+                onClick={() => setFollowModal('following')}
+              />
+              {/* Reputation is not interactive — plain div is correct */}
               <div className="w-24 shrink-0 text-center sm:text-left">
-                <span className="block font-bold text-lg text-foreground tabular-nums">
+                <span className="block font-bold text-lg text-foreground tabular-nums leading-tight">
                   {user.stats?.reputation ?? 0}
                 </span>
-                <span className="text-xs text-muted-foreground uppercase tracking-wide font-medium">
+                <span className="block text-xs text-muted-foreground uppercase tracking-wide font-medium">
                   Reputation
                 </span>
               </div>
@@ -508,14 +469,20 @@ export default function OtherUserProfile() {
 
         {/* ── Content Tabs ────────────────────────────────────────────────── */}
         <div className="mt-6">
-          <div className="flex items-center w-full border-b bg-background/80 sticky top-0 -mt-10 pt-10 z-40 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
+          <div
+            role="tablist"
+            aria-label="Profile content"
+            className="flex items-center w-full border-b bg-background/80 sticky top-0 -mt-10 pt-10 z-40 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60"
+          >
             <TabButton
+              id="posts"
               active={activeTab === 'posts'}
               onClick={() => setActiveTab('posts')}
               icon={<Grid className="h-4 w-4" />}
               label="Posts"
             />
             <TabButton
+              id="media"
               active={activeTab === 'media'}
               onClick={() => setActiveTab('media')}
               icon={<ImageIcon className="h-4 w-4" />}
@@ -523,38 +490,35 @@ export default function OtherUserProfile() {
             />
           </div>
 
-          <div className={activeTab === 'posts' ? 'block' : 'hidden'}>
-            <ProfileFeedContainer userId={user?._id} />
+          {/* Posts tab panel */}
+          <div
+            role="tabpanel"
+            id="tabpanel-posts"
+            aria-labelledby="tab-posts"
+            hidden={activeTab !== 'posts'}
+          >
+            <ProfileFeedContainer
+              userId={user._id}
+              emptyState={
+                <EmptyTab
+                  icon={FileText}
+                  message="This user hasn't posted anything yet."
+                />
+              }
+            />
           </div>
-          <div className={activeTab === 'media' ? 'block' : 'hidden'}>
-            <div className="flex flex-col items-center justify-center py-20 text-muted-foreground gap-2">
-              <ImageIcon className="h-10 w-10 opacity-20" />
-              <p className="text-sm">No media yet.</p>
-            </div>
+
+          {/* Media tab panel */}
+          <div
+            role="tabpanel"
+            id="tabpanel-media"
+            aria-labelledby="tab-media"
+            hidden={activeTab !== 'media'}
+          >
+            <EmptyTab icon={ImageIcon} message="No media uploaded yet." />
           </div>
         </div>
       </main>
     </div>
-  );
-}
-
-// ─── Small tab button sub-component ───────────────────────────────────────────
-function TabButton({ active, onClick, icon, label }) {
-  return (
-    <button
-      onClick={onClick}
-      className={cn(
-        'flex-1 pb-3 pt-2 text-sm font-medium transition-all relative',
-        active ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
-      )}
-    >
-      <span className="flex items-center justify-center gap-2">
-        {icon}
-        {label}
-      </span>
-      {active && (
-        <span className="absolute bottom-0 left-0 w-full h-[2px] bg-indigo-600 rounded-t-full" />
-      )}
-    </button>
   );
 }
