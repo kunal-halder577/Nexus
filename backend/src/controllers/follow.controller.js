@@ -114,6 +114,7 @@ export const unfollowUser = asyncHandler(async (req, res) => {
 });
 export const getFollowers = asyncHandler(async (req, res) => {
     const { userId } = req.params;
+    const currentUserId = req.user._id;
     const page = Math.max(1, parseInt(req.query.page) || 1);
     const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 20));
     const skip = (page - 1) * limit;
@@ -141,10 +142,47 @@ export const getFollowers = asyncHandler(async (req, res) => {
                 localField: 'followerId',
                 pipeline: [
                     {
+                        $lookup: {
+                            from: 'follows',
+                            let: { targetUserId: '$_id'},
+                            pipeline: [
+                                {   
+                                    $match: {
+                                        $expr: {
+                                            $and: [
+                                                { 
+                                                    $eq: [
+                                                        "$followerId", 
+                                                        new mongoose.Types.ObjectId(currentUserId)
+                                                    ] 
+                                                },
+                                                {
+                                                    $eq: [
+                                                        "$followingId",
+                                                        "$$targetUserId"
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ],
+                            as: 'currentUserFollowingStatus'
+                        }
+                    },
+                    {
+                        $addFields: {
+                            isFollowing: {
+                                $gt: [{ $size: '$currentUserFollowingStatus'}, 0]
+                            }
+                        }
+                    },
+                    {
                         $project: {
                             name: 1,
                             username: 1,
-                            avatarUrl: 1
+                            avatarUrl: 1,
+                            isFollowing: 1
                         }
                     }
                 ],
@@ -152,7 +190,10 @@ export const getFollowers = asyncHandler(async (req, res) => {
             }
         },
         {
-            $unwind: '$followerId' 
+            $unwind: {
+                path: '$followerId',
+                preserveNullAndEmptyArrays: true
+            }
         },
         {
             $project: {
@@ -174,6 +215,7 @@ export const getFollowers = asyncHandler(async (req, res) => {
 });
 export const getFollowing = asyncHandler(async (req, res) => {
     const { userId } = req.params;
+    const currentUserId = req.user._id;
     const page = Math.max(1, parseInt(req.query.page) || 1);
     const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 20));
     const skip = (page - 1) * limit;
@@ -201,10 +243,47 @@ export const getFollowing = asyncHandler(async (req, res) => {
                 localField: 'followingId',
                 pipeline: [
                     {
+                        $lookup: {
+                            from: 'follows',
+                            let: { targetUserId: '$_id'},
+                            pipeline: [
+                                {
+                                    $match: {
+                                        $expr: {
+                                            $and: [
+                                                {
+                                                    $eq: [
+                                                        "$followingId",
+                                                        "$$targetUserId"
+                                                    ]
+                                                },
+                                                {
+                                                    $eq: [
+                                                        "$followerId",
+                                                        new mongoose.Types.ObjectId(currentUserId)
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ],
+                            as: 'currentUserFollowingStatus'
+                        }
+                    },
+                    {
+                        $addFields: {
+                            isFollowing: {
+                                $gt: [{ $size: '$currentUserFollowingStatus'}, 0]
+                            }
+                        }
+                    },
+                    {
                         $project: {
                             name: 1,
                             username: 1,
-                            avatarUrl: 1
+                            avatarUrl: 1,
+                            isFollowing: 1
                         }
                     }
                 ],
@@ -212,7 +291,10 @@ export const getFollowing = asyncHandler(async (req, res) => {
             }
         },
         {
-            $unwind: '$followingId' 
+            $unwind: {
+                path: '$followingId',
+                preserveNullAndEmptyArrays: true
+            }
         },
         {
             $project: {
