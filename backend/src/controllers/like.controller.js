@@ -109,7 +109,12 @@ export const getLikers = asyncHandler(async (req, res) => {
 
     const [likes, total] = await Promise.all([
         Like.aggregate([
-            { $match: { likableId, likableType } },
+            { 
+                $match: { 
+                    likableId: new mongoose.Types.ObjectId(likableId),
+                    likableType 
+                } 
+            },
             { $sort: { createdAt: -1 } },
             { $skip: (page - 1) * limit },
             { $limit: limit },
