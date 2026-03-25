@@ -149,8 +149,11 @@ export const likeApi = baseApi.injectEndpoints({
     }),
 
     getPostLikers: builder.query({
-      query: (id) => ({ url: `likes/likers/post/${id}` }),
-      providesTags: (result, error, id) => [{ type: POST_LIKERS, id }],
+      query: ({id, page = 1, limit = 20}) => ({ 
+        url: `likes/likers/post/${id}`,
+        params: { page, limit }
+      }),
+      providesTags: (result, error, {id}) => [{ type: POST_LIKERS, id }],
     }),
 
     getCommentLikers: builder.query({
