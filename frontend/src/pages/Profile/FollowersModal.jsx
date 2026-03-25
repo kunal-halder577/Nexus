@@ -10,7 +10,6 @@ import {
   useGetFollowingQuery,
   useFollowUserMutation,
   useUnfollowUserMutation,
-  useGetFollowStatusQuery,
 } from '@/features/follow/api/followApi';
 import { useSelector } from 'react-redux';
 import { selectCurrentUser } from '@/features/auth/authSlice';
@@ -21,14 +20,10 @@ function UserRow({ user, onClose }) {
   const currentUser = useSelector(selectCurrentUser);
   const isOwn = user._id === currentUser?._id;
 
-  const { data: followStatusData, isLoading: isLoadingStatus } = useGetFollowStatusQuery(
-    user._id,
-    { skip: isOwn }
-  );
   const [followUser, { isLoading: isFollowing }] = useFollowUserMutation();
   const [unfollowUser, { isLoading: isUnfollowing }] = useUnfollowUserMutation();
 
-  const isFollowing_ = followStatusData?.data?.isFollowing ?? false;
+  const isFollowing_ = user?.isFollowing ?? false;
   const isPending = isFollowing || isUnfollowing;
 
   const handleToggle = useCallback(async () => {
@@ -78,7 +73,7 @@ function UserRow({ user, onClose }) {
         <Button
           size="sm"
           variant={isFollowing_ ? 'outline' : 'default'}
-          disabled={isPending || isLoadingStatus}
+          disabled={isPending}
           onClick={handleToggle}
           className={cn(
             'h-8 w-24 shrink-0 text-xs font-medium relative overflow-hidden transition-colors duration-300 cursor-pointer',
@@ -87,7 +82,7 @@ function UserRow({ user, onClose }) {
               : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm shadow-indigo-500/20'
           )}
         >
-          {isPending || isLoadingStatus ? (
+          {isPending? (
             <span className="h-3 w-3 rounded-full border-2 border-current border-t-transparent animate-spin" />
           ) : isFollowing_ ? (
             <span className="flex items-center gap-1">
