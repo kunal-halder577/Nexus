@@ -83,6 +83,7 @@ export const toggleLike = asyncHandler(async (req, res) => {
 });
 export const getLikers = asyncHandler(async (req, res) => {
     const { likableId, likableType } = req.params;
+    const currentUserId = req.user._id;
     const page = Math.max(1, parseInt(req.query.page) || 1);
     const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 20));
 
@@ -107,12 +108,82 @@ export const getLikers = asyncHandler(async (req, res) => {
     }
 
     const [likes, total] = await Promise.all([
-        Like.find({ likableId, likableType })
-            .populate('user', 'name username avatarUrl')
-            .sort({ createdAt: -1 })
-            .skip((page - 1) * limit)
-            .limit(limit)
-            .lean(),
+        Like.aggregate([
+            { $match: { likableId, likableType } },
+            { $sort: { createdAt: -1 } },
+            { $skip: (page - 1) * limit },
+            { $limit: limit },
+            {
+                $lookup: {
+                    from:'users',
+                    foreignField: '_id',
+                    localField: 'user',
+                    pipeline: [
+                        {
+                            $lookup: {
+                                from: 'follows',
+                                let: { targetUserId: '$_id'},
+                                pipeline: [
+                                    {
+                                        $match: {
+                                            $expr: {
+                                                $and: [
+                                                    { 
+                                                        $eq: [
+                                                            "$followingId", 
+                                                            "$$targetUserId"
+                                                        ]   
+                                                    },
+                                                    {
+                                                        $eq: [
+                                                            "$followerId",
+                                                            new mongoose.Types.ObjectId(currentUserId)
+                                                        ]
+                                                    }
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    { $limit: 1}
+                                ],
+                                as: 'currentUserFollowingStatus'
+                            }
+                        },
+                        {
+                            $addFields: {
+                                isFollowing: {
+                                    $cond: [
+                                        { $eq: ['$_id', new mongoose.Types.ObjectId(currentUserId)] },
+                                        '$$REMOVE',
+                                        { $gt: [{ $size: '$currentUserFollowingStatus' }, 0] },
+                                    ],
+                                },
+                            },
+                        },
+                        {
+                            $project: {
+                                name: 1,
+                                username: 1,
+                                avatarUrl: 1,
+                                isFollowing: 1,
+                            }
+                        }
+                    ],
+                    as: 'user'
+                }
+            },
+            {
+                $unwind: {
+                    path: '$user',
+                    preserveNullAndEmptyArrays: true
+                }
+            },
+            {
+                $project: {
+                    user: 1
+                }
+            }
+        ]),
         Like.countDocuments({ likableId, likableType }),
     ]);
 
