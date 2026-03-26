@@ -11,6 +11,7 @@ import PostActionBar from './components/PostActionBar';
 import PostCommentSection from './components/PostCommentSection';
 import { cn } from '@/lib/utils';
 import LikersModal from './components/LikersModal';
+import PostNotFound from '@/pages/Error/PostNotFoundPage';
 
 const PostDetailPage = () => {
   const { id } = useParams();
@@ -21,7 +22,7 @@ const PostDetailPage = () => {
   const post = data?.data;
 
   if (isLoading) return <PostDetailSkeleton />;
-  if (isError || !post) return <PostDetailError onBack={() => navigate(-1)} />;
+  if (isError || !post) return <PostNotFound />;
 
   return (
     <div className="min-h-screen bg-background">

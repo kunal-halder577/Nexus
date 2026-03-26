@@ -16,6 +16,8 @@ import SearchPage from "@/pages/Search/SearchPage";
 import OtherUserProfile from "@/pages/Profile/OtherProfile";
 import NexusFullPageCreate from "@/pages/Post/create-post";
 import PostDetailPage from "@/pages/Post/post-details/PostDetails";
+import GlobalErrorPage from "@/pages/Error/GlobalErrorPage";
+import NotFoundPage from "@/pages/Error/NotFoundPage";
 
 const router = createBrowserRouter([
   // Authenticaion
@@ -50,6 +52,7 @@ const router = createBrowserRouter([
     children: [
       {
         element: <App />,
+        errorElement: <GlobalErrorPage />,
         children: [
           { 
             path: "/", 
@@ -82,6 +85,10 @@ const router = createBrowserRouter([
               {
                 path: "post/:id",
                 element: <PostDetailPage />
+              },
+              {
+                path: "*",
+                element: <NotFoundPage />
               }
             ]
           }

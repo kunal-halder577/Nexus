@@ -31,6 +31,7 @@ import {
 import { toast } from 'sonner';
 import FollowersModal from './FollowersModal';
 import AvatarLightbox from './AvatarLightbox';
+import UserNotFound from '../Error/UserNotFoundPage';
 
 // ─── Stat button — accessible, no layout shift on label change ────────────────
 function StatButton({ count, label, onClick }) {
@@ -179,17 +180,7 @@ export default function OtherUserProfile() {
   }
 
   // ─── Error state ─────────────────────────────────────────────────────────────
-  if (isError) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[50vh] text-muted-foreground gap-3">
-        <ShieldCheck className="h-12 w-12 opacity-20" />
-        <p className="font-medium">Profile not found or private.</p>
-        <p className="text-xs opacity-50">{error?.data?.message || 'Unknown error'}</p>
-      </div>
-    );
-  }
-
-  if (!user) return null;
+  if (error || !user) return <UserNotFound />;
 
   return (
     <div className="min-h-screen bg-background text-foreground pb-20">
