@@ -28,7 +28,7 @@ export default function CreateToolbar({
             size="icon"
             aria-label="Attach image"
             onClick={onPickImage}
-            className="text-muted-foreground hover:text-indigo-500 hover:bg-indigo-500/10 rounded-xl transition-all"
+            className="text-muted-foreground hover:text-indigo-500 hover:bg-indigo-500/10 rounded-xl transition-all cursor-pointer"
           >
             <ImageIcon className="w-5 h-5" aria-hidden="true" />
           </Button>
@@ -38,7 +38,7 @@ export default function CreateToolbar({
             size="icon"
             aria-label="Attach video"
             onClick={onPickVideo}
-            className="text-muted-foreground hover:text-indigo-500 hover:bg-indigo-500/10 rounded-xl transition-all"
+            className="text-muted-foreground hover:text-indigo-500 hover:bg-indigo-500/10 rounded-xl transition-all cursor-pointer"
           >
             <Video className="w-5 h-5" aria-hidden="true" />
           </Button>
@@ -48,7 +48,7 @@ export default function CreateToolbar({
             size="icon"
             aria-label="Attach GIF"
             onClick={onPickGif}
-            className="text-muted-foreground hover:text-indigo-500 hover:bg-indigo-500/10 rounded-xl transition-all"
+            className="text-muted-foreground hover:text-indigo-500 hover:bg-indigo-500/10 rounded-xl transition-all cursor-pointer"
           >
             <span className="text-[11px] font-black tracking-tight leading-none" aria-hidden="true">
               GIF
@@ -59,7 +59,7 @@ export default function CreateToolbar({
             variant="ghost"
             size="icon"
             aria-label="Insert emoji"
-            className="text-muted-foreground hover:text-indigo-500 hover:bg-indigo-500/10 rounded-xl transition-all"
+            className="text-muted-foreground hover:text-indigo-500 hover:bg-indigo-500/10 rounded-xl transition-all cursor-pointer"
           >
             <Smile className="w-5 h-5" aria-hidden="true" />
           </Button>
@@ -103,7 +103,7 @@ export default function CreateToolbar({
             variant="ghost"
             size="icon"
             aria-label="More options"
-            className="text-muted-foreground hover:text-foreground rounded-xl transition-colors"
+            className="text-muted-foreground hover:text-foreground rounded-xl transition-colors cursor-pointer"
           >
             <MoreHorizontal className="w-5 h-5" aria-hidden="true" />
           </Button>

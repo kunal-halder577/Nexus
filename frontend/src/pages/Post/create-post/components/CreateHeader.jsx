@@ -8,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useNavigate } from 'react-router-dom';
 
 export default function CreateHeader({
   saveState,
@@ -30,7 +31,7 @@ export default function CreateHeader({
     },
     idle: null,
   }[saveState];
-
+  const navigate = useNavigate();
   return (
     <header className="flex-none z-40 bg-background/60 backdrop-blur-2xl border-b border-border/20 px-6 py-4 flex items-center justify-between">
       <div className="flex items-center gap-4">
@@ -38,7 +39,8 @@ export default function CreateHeader({
           variant="ghost"
           size="icon"
           aria-label="Go back"
-          className="rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/40 -ml-2"
+          onClick={() => navigate(-1)}
+          className="rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/40 -ml-2 cursor-pointer"
         >
           <ArrowLeft className="w-5 h-5" aria-hidden="true" />
         </Button>
@@ -63,7 +65,7 @@ export default function CreateHeader({
         <Select value={visibility} onValueChange={onVisibilityChange}>
           <SelectTrigger
             aria-label="Post visibility"
-            className="w-[150px] h-10 border-none bg-transparent hover:bg-muted/30 focus:ring-0 focus:ring-offset-0 shadow-none transition-colors text-muted-foreground hover:text-foreground justify-start gap-2"
+            className="w-[150px] h-10 border-none bg-transparent hover:bg-muted/30 focus:ring-0 focus:ring-offset-0 shadow-none transition-colors text-muted-foreground cursor-pointer hover:text-foreground justify-start gap-2"
           >
             {visibility === 'public' ? (
               <Globe className="w-4 h-4 shrink-0 text-indigo-400" aria-hidden="true" />
@@ -89,7 +91,7 @@ export default function CreateHeader({
           disabled={!canPublish}
           title="Publish (⌘↩)"
           aria-keyshortcuts="Control+Enter Meta+Enter"
-          className="rounded-full px-6 gap-2 bg-indigo-500 hover:bg-indigo-600 text-white disabled:opacity-100 disabled:bg-indigo-500/40 disabled:text-white/70 font-medium transition-all duration-200"
+          className="rounded-full px-6 gap-2 bg-indigo-500 hover:bg-indigo-600 text-white disabled:opacity-100 disabled:bg-indigo-500/40 disabled:text-white/70 font-medium cursor-pointer transition-all duration-200"
         >
           {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
             {isLoading ? 'Publishing…' : 'Publish'}

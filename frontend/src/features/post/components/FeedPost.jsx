@@ -169,7 +169,7 @@ const StatBtn = ({ icon: Icon, count, onClick, active, activeClass, hoverClass, 
     variant="ghost"
     size="sm"
     onClick={(e) => { e.stopPropagation(); onClick?.(); }}
-    className={`group h-7 px-2.5 rounded-full transition-all duration-200 gap-1.5
+    className={`group h-7 px-2.5 rounded-full transition-all duration-200 gap-1.5 cursor-pointer
       ${active ? activeClass : `text-muted-foreground ${hoverClass}`}`}
   >
     <Icon className={`w-3.5 h-3.5 transition-transform duration-200 group-hover:scale-110
@@ -368,7 +368,7 @@ const FeedPost = ({ post }) => {
               variant="ghost"
               size="icon"
               onClick={(e) => e.stopPropagation()}
-              className="h-7 w-7 text-muted-foreground hover:text-foreground rounded-full shrink-0"
+              className="h-7 w-7 text-muted-foreground hover:text-foreground rounded-full shrink-0 cursor-pointer"
             >
               <MoreHorizontal className="w-4 h-4" />
             </Button>

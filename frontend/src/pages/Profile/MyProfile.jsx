@@ -33,7 +33,7 @@ function StatButton({ count, label, onClick }) {
       onClick={onClick}
       aria-label={`${count} ${label} — click to view list`}
       className={cn(
-        'w-20 shrink-0 text-center sm:text-left',
+        'w-20 shrink-0 text-center sm:text-left cursor-pointer',
         'rounded-lg py-1 -my-1 px-1 -mx-1',         // invisible padding for larger hit area
         'hover:opacity-80 transition-opacity',
         'focus-visible:outline-none focus-visible:ring-2',
@@ -163,7 +163,7 @@ export default function UserProfile() {
                 className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 group"
                 aria-label="View profile picture"
               >
-                <Avatar className="h-32 w-32 border border-border/50 transition-all group-hover:ring-2 group-hover:ring-ring group-hover:ring-offset-1 group-hover:brightness-90">
+                <Avatar className="h-32 w-32 border border-border/50 transition-all group-hover:ring-2 group-hover:ring-ring group-hover:ring-offset-1 group-hover:brightness-90 cursor-pointer">
                   <AvatarImage src={avatarSrc} alt={profile?.name || 'User avatar'} />
                   <AvatarFallback className="text-4xl">{avatarFallback}</AvatarFallback>
                 </Avatar>
@@ -281,7 +281,7 @@ export default function UserProfile() {
                 id={`tab-${id}`}
                 onClick={() => setActiveTab(id)}
                 className={cn(
-                  'flex-1 pb-3 pt-2 text-sm font-medium transition-all relative',
+                  'flex-1 pb-3 pt-2 text-sm font-medium transition-all relative cursor-pointer',
                   activeTab === id
                     ? 'text-foreground'
                     : 'text-muted-foreground hover:text-foreground'

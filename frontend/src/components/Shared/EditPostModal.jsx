@@ -212,7 +212,7 @@ const EditPostModal = ({ post, open, onClose, onSubmit, isLoading }) => {
               size="sm"
               onClick={onClose}
               disabled={isLoading}
-              className="rounded-full h-8 px-4 text-[13px] text-muted-foreground hover:text-foreground"
+              className="rounded-full h-8 px-4 text-[13px] text-muted-foreground hover:text-foreground cursor-pointer"
             >
               Cancel
             </Button>
@@ -223,7 +223,7 @@ const EditPostModal = ({ post, open, onClose, onSubmit, isLoading }) => {
               disabled={!isDirty || isInvalid || isLoading}
               title="Save (Ctrl+Enter / ⌘+Enter)"
               className={cn(
-                'rounded-full h-8 px-4 text-[13px] font-semibold transition-all duration-200',
+                'rounded-full h-8 px-4 text-[13px] font-semibold transition-all duration-200 cursor-pointer',
                 'bg-indigo-600 hover:bg-indigo-500 text-white',
                 'disabled:opacity-40 disabled:cursor-not-allowed',
                 isDirty && !isInvalid && !isLoading && 'shadow-md shadow-indigo-500/20'

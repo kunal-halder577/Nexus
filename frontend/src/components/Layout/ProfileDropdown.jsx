@@ -1,11 +1,11 @@
 import React from "react";
-import { Moon, Sun, Monitor, Group, User, Settings, Settings2 } from "lucide-react";
+import { Moon, Sun, Monitor, User, Settings, LogOut, ChevronRight, Check } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 
 // API & Store Imports
 import { useLogoutMutation } from "@/features/auth/api/authApi.js";
-import { baseApi } from "@/lib/api/baseApi.js"; // Ensure this path is correct
+import { baseApi } from "@/lib/api/baseApi.js";
 import { selectCurrentUser } from "@/features/auth/authSlice.js";
 import { logout as clientLogout } from "@/features/auth/authAction.js";
 import { useUiStore } from "@/stores/ui.store";
@@ -25,12 +25,18 @@ import {
   DropdownMenuPortal,
 } from "@/components/ui/dropdown-menu";
 
+const themes = [
+  { value: "light",  label: "Light",  icon: Sun },
+  { value: "dark",   label: "Dark",   icon: Moon },
+  { value: "system", label: "System", icon: Monitor },
+];
+
 export const ProfileDropdown = ({ className }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const user = useSelector(selectCurrentUser);
 
-  // Zustand & Redux Hooks
+  const theme    = useUiStore((s) => s.theme);
   const setTheme = useUiStore((s) => s.setTheme);
   const [logout] = useLogoutMutation();
 
@@ -46,75 +52,123 @@ export const ProfileDropdown = ({ className }) => {
     }
   };
 
-  if(!user) return null;
+  if (!user) return null;
+
+  const initials = user?.name?.charAt(0)?.toUpperCase() || 'U';
 
   return (
     <DropdownMenu>
+      {/* ── TRIGGER ── */}
       <DropdownMenuTrigger asChild>
-        <Avatar className={`h-8 w-8 cursor-pointer border border-border/50 transition-all hover:ring-2 hover:ring-ring hover:ring-offset-1 ${className}`}>
-          <AvatarImage src={user?.avatarUrl} alt="@user" />
-          <AvatarFallback>{user?.name?.charAt(0) ||'U'}</AvatarFallback>
+        <Avatar className={`cursor-pointer ring-2 ring-transparent hover:ring-indigo-500/40 transition-all duration-200 ${className}`}>
+          <AvatarImage src={user?.avatarUrl} alt={user?.name} />
+          <AvatarFallback className="bg-indigo-500/15 text-indigo-500 dark:text-indigo-400 font-semibold text-sm">
+            {initials}
+          </AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>
-      
-      <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuLabel>
-          <div className="flex items-center gap-2">
-             <Avatar className="h-8 w-8 cursor-pointer border border-border/50 transition-all hover:ring-2 hover:ring-ring hover:ring-offset-1">
-                <AvatarImage src={user?.avatarUrl} alt="@user" />
-                <AvatarFallback>{user?.name?.charAt(0) ||'U'}</AvatarFallback>
+
+      {/* ── CONTENT ── */}
+      <DropdownMenuContent
+        align="end"
+        sideOffset={8}
+        className="w-64 rounded-2xl p-1.5 shadow-xl shadow-black/10 dark:shadow-black/30 border border-border/60"
+      >
+
+        {/* Profile header */}
+        <DropdownMenuLabel className="px-2 py-2 mb-0.5">
+          <div className="flex items-center gap-3">
+            <Avatar className="size-10 ring-2 ring-indigo-500/20 shrink-0">
+              <AvatarImage src={user?.avatarUrl} alt={user?.name} />
+              <AvatarFallback className="bg-indigo-500/15 text-indigo-500 dark:text-indigo-400 font-semibold">
+                {initials}
+              </AvatarFallback>
             </Avatar>
-            <div className="flex flex-col">
-              <span>{user?.name || 'Name'}</span>
-              <span>{'@'+user?.username || '@username'}</span>
+            <div className="flex flex-col min-w-0">
+              <span className="text-[14px] font-semibold text-foreground truncate leading-tight">
+                {user?.name || 'Your Name'}
+              </span>
+              <span className="text-[12px] text-muted-foreground/70 truncate mt-0.5">
+                @{user?.username || 'username'}
+              </span>
             </div>
+            {/* Online dot */}
+            <span className="ml-auto size-2 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400/60 shrink-0" />
           </div>
         </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem>
-          <User />
-          <span>Profile</span>
+
+        <DropdownMenuSeparator className="mx-1 my-1 bg-border/50" />
+
+        {/* Nav items */}
+        <DropdownMenuItem
+          className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg cursor-pointer text-[13.5px] text-foreground/80 hover:text-foreground hover:bg-accent/70 focus:bg-accent/70 transition-colors"
+          onClick={() => navigate('/profile/me')}
+        >
+          <span className="flex items-center justify-center size-7 rounded-md bg-accent shrink-0">
+            <User className="size-3.5 text-muted-foreground" />
+          </span>
+          Profile
         </DropdownMenuItem>
-        <DropdownMenuItem>
-          <Settings />
-          <span>Settings</span>
+
+        <DropdownMenuItem
+          className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg cursor-pointer text-[13.5px] text-foreground/80 hover:text-foreground hover:bg-accent/70 focus:bg-accent/70 transition-colors"
+          onClick={() => navigate('/settings')}
+        >
+          <span className="flex items-center justify-center size-7 rounded-md bg-accent shrink-0">
+            <Settings className="size-3.5 text-muted-foreground" />
+          </span>
+          Settings
         </DropdownMenuItem>
-        
-        <DropdownMenuSeparator />
-        
-        {/* Theme Sub-Menu */}
+
+        <DropdownMenuSeparator className="mx-1 my-1 bg-border/50" />
+
+        {/* Theme sub-menu */}
         <DropdownMenuSub>
-          <DropdownMenuSubTrigger>
-            <Sun className="mr-2 h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-            <Moon className="absolute mr-2 h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-            <span>Theme</span>
+          <DropdownMenuSubTrigger className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg cursor-pointer text-[13.5px] text-foreground/80 hover:text-foreground hover:bg-accent/70 focus:bg-accent/70 transition-colors [&>svg:last-child]:ml-auto [&>svg:last-child]:hidden">
+            <span className="flex items-center justify-center size-7 rounded-md bg-accent shrink-0">
+              {/* Sun/Moon toggle icon */}
+              <Sun className="size-3.5 text-muted-foreground rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+              <Moon className="absolute size-3.5 text-muted-foreground rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+            </span>
+            <span>Appearance</span>
+            <ChevronRight className="ml-auto size-3.5 text-muted-foreground/50" />
           </DropdownMenuSubTrigger>
+
           <DropdownMenuPortal>
-            <DropdownMenuSubContent>
-              <DropdownMenuItem onClick={() => setTheme("light")}>
-                <Sun className="mr-2 h-4 w-4" />
-                <span>Light</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setTheme("dark")}>
-                <Moon className="mr-2 h-4 w-4" />
-                <span>Dark</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setTheme("system")}>
-                <Monitor className="mr-2 h-4 w-4" />
-                <span>System</span>
-              </DropdownMenuItem>
+            <DropdownMenuSubContent
+              sideOffset={6}
+              className="w-44 rounded-xl p-1.5 shadow-xl shadow-black/10 dark:shadow-black/30 border border-border/60"
+            >
+              {themes.map(({ value, label, icon: Icon }) => (
+                <DropdownMenuItem
+                  key={value}
+                  onClick={() => setTheme(value)}
+                  className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg cursor-pointer text-[13px] hover:bg-accent/70 focus:bg-accent/70 transition-colors"
+                >
+                  <Icon className="size-3.5 text-muted-foreground" />
+                  <span>{label}</span>
+                  {theme === value && (
+                    <Check className="ml-auto size-3.5 text-indigo-500 dark:text-indigo-400" />
+                  )}
+                </DropdownMenuItem>
+              ))}
             </DropdownMenuSubContent>
           </DropdownMenuPortal>
         </DropdownMenuSub>
 
-        <DropdownMenuSeparator />
-        
-        <DropdownMenuItem 
-          className="text-red-600 focus:text-red-600 focus:bg-red-100 dark:focus:bg-red-900/20"
-          onClick={handleLogout} 
+        <DropdownMenuSeparator className="mx-1 my-1 bg-border/50" />
+
+        {/* Logout */}
+        <DropdownMenuItem
+          onClick={handleLogout}
+          className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg cursor-pointer text-[13.5px] text-red-500 hover:text-red-500 hover:bg-red-500/8 focus:bg-red-500/8 focus:text-red-500 dark:hover:bg-red-500/10 transition-colors"
         >
+          <span className="flex items-center justify-center size-7 rounded-md bg-red-500/10 shrink-0">
+            <LogOut className="size-3.5 text-red-500" />
+          </span>
           Log out
         </DropdownMenuItem>
+
       </DropdownMenuContent>
     </DropdownMenu>
   );

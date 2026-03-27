@@ -19,7 +19,7 @@ export default function DraftBanner({ draft, onRestore, onDiscard }) {
             size="sm"
             variant="ghost"
             onClick={onRestore}
-            className="text-indigo-300 hover:text-white hover:bg-indigo-500/20 h-8 text-xs"
+            className="text-indigo-300 hover:text-white hover:bg-indigo-500/20 h-8 text-xs cursor-pointer"
           >
             Restore
           </Button>
@@ -28,7 +28,7 @@ export default function DraftBanner({ draft, onRestore, onDiscard }) {
             variant="ghost"
             onClick={onDiscard}
             aria-label="Discard draft"
-            className="text-muted-foreground hover:text-white hover:bg-muted/30 h-8"
+            className="text-muted-foreground hover:text-white hover:bg-muted/30 h-8 cursor-pointer"
           >
             <X className="w-3.5 h-3.5" />
           </Button>
