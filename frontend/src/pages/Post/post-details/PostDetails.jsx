@@ -34,7 +34,7 @@ const PostDetailPage = () => {
           size="icon"
           type="button"
           onClick={() => navigate(-1)}
-          className="rounded-full h-9 w-9 text-muted-foreground hover:text-foreground hover:bg-muted/50"
+          className="rounded-full h-9 w-9 text-muted-foreground hover:text-foreground hover:bg-muted/50 cursor-pointer"
         >
           <ArrowLeft className="w-5 h-5" aria-hidden="true" />
           <span className="sr-only">Go back</span>
@@ -85,6 +85,8 @@ const PostDetailPage = () => {
 };
 
 // ─── Stats summary row ────────────────────────────────────────────────────────
+const plural = (count, word) => count === 1 ? word : `${word}s`;
+
 const PostStatsSummary = ({ post }) => {
   const stats = post.stats ?? {};
   const [showLikers, setShowLikers] = useState(false);
@@ -94,15 +96,10 @@ const PostStatsSummary = ({ post }) => {
   const openLikers = useCallback(() => setShowLikers(true), []);
 
   const items = [
-    {
-      label:      'Likes',
-      value:      stats.likeCount    ?? 0,
-      onClick:    openLikers,
-      triggerRef: likesTriggerRef,
-    },
-    { label: 'Comments', value: stats.commentCount ?? 0 },
-    { label: 'Shares',   value: stats.shareCount   ?? 0 },
-    { label: 'Views',    value: stats.viewCount     ?? 0 },
+    { label: plural(stats.likeCount,    'Like'),    value: stats.likeCount    ?? 0, onClick: openLikers, triggerRef: likesTriggerRef },
+    { label: plural(stats.commentCount, 'Comment'), value: stats.commentCount ?? 0 },
+    { label: plural(stats.shareCount,   'Share'),   value: stats.shareCount   ?? 0 },
+    { label: plural(stats.viewCount,    'View'),     value: stats.viewCount    ?? 0 },
   ].filter((i) => i.value > 0);
 
   if (items.length === 0) return null;

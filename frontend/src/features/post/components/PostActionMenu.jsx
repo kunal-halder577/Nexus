@@ -83,7 +83,7 @@ const PostActionMenu = ({ actions = [], children }) => {
   const cleanedNormal = cleanSeparators(normal);
 
   return (
-    <DropdownMenu>
+    <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>{children}</DropdownMenuTrigger>
 
       <DropdownMenuContent

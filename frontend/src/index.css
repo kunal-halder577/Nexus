@@ -133,5 +133,10 @@
   }
   body {
     @apply bg-background text-foreground;
+    overflow-y: scroll;
   }
+  body::-webkit-scrollbar { width: 6px; }
+  body::-webkit-scrollbar-track { background: transparent; }
+  body::-webkit-scrollbar-thumb { background: #6366f1; border-radius: 9999px; }
+  body::-webkit-scrollbar-thumb:hover { background: #818cf8; }
 }

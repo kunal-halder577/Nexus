@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 import { Search, MoreHorizontal, TrendingUp, Flame, Sparkles } from 'lucide-react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -10,27 +10,6 @@ const RightSidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const isSearchPage = location.pathname === '/explore';
-  const containerRef = useRef(null);
-
-  useEffect(() => {
-    const styleId = 'nexus-rightsidebar-scrollbar';
-    if (document.getElementById(styleId)) return;
-
-    const style = document.createElement('style');
-    style.id = styleId;
-    // Use the data attribute we set on the wrapper div to scope styles
-    style.textContent = `
-      [data-rightsidebar] [data-radix-scroll-area-scrollbar][data-orientation="vertical"] {
-        background: transparent !important;
-      }
-      [data-rightsidebar] [data-radix-scroll-area-thumb] {
-        background: #6366f1 !important;
-        border-radius: 9999px !important;
-      }
-    `;
-    document.head.appendChild(style);
-    return () => { document.getElementById(styleId)?.remove(); };
-  }, []);
 
   const handleSidebarSearch = (e) => {
     const query = e.target.value.trim();
@@ -40,7 +19,7 @@ const RightSidebar = () => {
   };
 
   return (
-    <div data-rightsidebar className="flex flex-col h-full py-5 px-3 xl:px-5">
+    <div className="flex flex-col h-full py-5 px-3 xl:px-5">
 
       {/* SEARCH BAR */}
       {!isSearchPage && (
@@ -58,8 +37,13 @@ const RightSidebar = () => {
       )}
 
       {/* SCROLLABLE CONTENT */}
-      <ScrollArea className="flex-1 min-h-0 w-full [&>[data-radix-scroll-area-viewport]]:!pr-2">
-
+      <ScrollArea 
+        className="flex-1 min-h-0 w-full 
+          [&>[data-radix-scroll-area-viewport]]:!pr-2
+          [&_[data-radix-scroll-area-scrollbar][data-orientation=vertical]]:!bg-transparent
+          [&_[data-radix-scroll-area-thumb]]:!bg-indigo-500
+          [&_[data-radix-scroll-area-thumb]]:!rounded-full"
+      >
         <div className="flex flex-col gap-4 pb-10 pr-1">
 
           {/* TRENDING CARD */}
@@ -118,7 +102,7 @@ const RightSidebar = () => {
                 {link}
               </span>
             ))}
-            <span className="text-[11px] text-muted-foreground/30 w-full mt-0.5">© 2025 Nexus</span>
+            <span className="text-[11px] text-muted-foreground/30 w-full mt-0.5">© 2026 Nexus</span>
           </div>
 
         </div>

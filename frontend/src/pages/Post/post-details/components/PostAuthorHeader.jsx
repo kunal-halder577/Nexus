@@ -156,7 +156,7 @@ const PostAuthorHeader = ({ post, onDeleteSuccess }) => {
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground"
+            className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground cursor-pointer"
           >
             <MoreHorizontal className="w-4 h-4" />
           </Button>

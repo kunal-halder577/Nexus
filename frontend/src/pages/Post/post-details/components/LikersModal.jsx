@@ -10,6 +10,7 @@ import { useFollowUserMutation, useUnfollowUserMutation } from '@/features/follo
 import { useSelector } from 'react-redux';
 import { selectCurrentUser } from '@/features/auth/authSlice';
 import { toast } from 'sonner';
+import { useScrollLock } from '@/hooks/useScrollLock';
 
 const LIMIT = 20;
 
@@ -219,16 +220,7 @@ export default function LikersModal({ postId, onClose, triggerRef }) {
   // Cancel any in-flight close timer if the component unmounts early
   useEffect(() => () => clearTimeout(closeTimerRef.current), []);
 
-  // Scroll lock
-  useEffect(() => {
-    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
-    document.body.style.overflow = 'hidden';
-    if (scrollbarWidth > 0) document.body.style.paddingRight = `${scrollbarWidth}px`;
-    return () => {
-      document.body.style.overflow = '';
-      document.body.style.paddingRight = '';
-    };
-  }, []);
+  useScrollLock(true)
 
   // Move focus into the modal when it opens
   useEffect(() => {

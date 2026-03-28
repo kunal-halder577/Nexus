@@ -73,16 +73,15 @@ const LeftSidebar = () => {
             <SidebarMenu className="gap-0.5">
               {navItems.map((item) => (
                 <SidebarMenuItem key={item.label}>
-                  <SidebarMenuButton asChild tooltip={item.label} className="p-0 hover:bg-transparent active:bg-transparent focus-visible:ring-0 focus-visible:bg-transparent data-[active=true]:bg-transparent">
+                  <SidebarMenuButton asChild tooltip={item.label} className="p-0 active:bg-transparent focus-visible:ring-0 focus-visible:bg-transparent data-[active=true]:bg-transparent">
                     <NavLink
                       to={item.path}
                       className={({ isActive }) =>
                         [
-                          'group relative flex items-center gap-3 px-3 h-11 rounded-xl w-full cursor-pointer transition-all duration-200',
-                          'text-muted-foreground hover:text-foreground',
+                          'relative flex items-center gap-3 px-3 h-11 rounded-xl w-full cursor-pointer transition-all duration-200',
                           isActive
                             ? 'text-indigo-500 dark:text-indigo-400 font-semibold'
-                            : 'hover:bg-accent/60',
+                            : 'text-muted-foreground hover:text-foreground hover:bg-accent/60',
                         ].join(' ')
                       }
                     >
@@ -98,7 +97,7 @@ const LeftSidebar = () => {
                             'flex items-center justify-center size-8 rounded-lg shrink-0 transition-colors duration-200',
                             isActive
                               ? 'bg-indigo-500/10 dark:bg-indigo-400/10 text-indigo-500 dark:text-indigo-400'
-                              : 'text-muted-foreground group-hover:text-foreground',
+                              : 'text-muted-foreground',
                           ].join(' ')}>
                             <item.icon className="size-[18px]" strokeWidth={isActive ? 2.2 : 1.8} />
                           </span>

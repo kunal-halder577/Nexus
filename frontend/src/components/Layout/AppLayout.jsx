@@ -5,21 +5,6 @@ import RightSidebar from "./Discovery"
 import { Outlet } from "react-router-dom"
 
 export default function AppLayout() {
-  useEffect(() => {
-    const styleId = 'nexus-feed-scrollbar';
-    if (document.getElementById(styleId)) return;
-
-    const style = document.createElement('style');
-    style.id = styleId;
-    style.textContent = `
-      html::-webkit-scrollbar { width: 6px; }
-      html::-webkit-scrollbar-track { background: transparent; }
-      html::-webkit-scrollbar-thumb { background: #6366f1; border-radius: 9999px; }
-      html::-webkit-scrollbar-thumb:hover { background: #818cf8; }
-    `;
-    document.head.appendChild(style);
-    return () => { document.getElementById(styleId)?.remove(); };
-  }, []);
 
   return (
     <SidebarProvider>

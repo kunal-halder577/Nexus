@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Download, ChevronLeft, ChevronRight, Video } from 'lucide-react';
 import { isImage, isGif, isVideo, formatSize } from '../mediaUtils';
+import { useScrollLock } from '@/hooks/useScrollLock';
 
 export default function MediaLightbox({ items, startIndex, onClose }) {
   const [index, setIndex] = useState(startIndex);
@@ -17,20 +18,7 @@ export default function MediaLightbox({ items, startIndex, onClose }) {
     return () => window.removeEventListener('keydown', onKey);
   }, [items.length, onClose]);
 
-  useEffect(() => {
-    // Calculate scrollbar width so the page doesn't "jump" when it disappears
-    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
-    
-    document.body.style.overflow = 'hidden';
-    if (scrollbarWidth > 0) {
-      document.body.style.paddingRight = `${scrollbarWidth}px`;
-    }
-
-    return () => { 
-      document.body.style.overflow = ''; 
-      document.body.style.paddingRight = '';
-    };
-  }, []);
+  useScrollLock(true);
 
   useEffect(() => {
     if (videoRef.current) {
@@ -72,7 +60,7 @@ export default function MediaLightbox({ items, startIndex, onClose }) {
           <button
             onClick={onClose}
             aria-label="Close media viewer"
-            className="w-9 h-9 rounded-xl flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+            className="w-9 h-9 rounded-xl flex items-center justify-center cursor-pointer text-white/60 hover:text-white hover:bg-white/10 transition-colors"
           >
             <X className="w-5 h-5" aria-hidden="true" />
           </button>
@@ -105,14 +93,14 @@ export default function MediaLightbox({ items, startIndex, onClose }) {
             <button
               onClick={() => setIndex((i) => (i - 1 + items.length) % items.length)}
               aria-label="Previous media"
-              className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center cursor-pointer text-white transition-colors"
             >
               <ChevronLeft className="w-5 h-5" aria-hidden="true" />
             </button>
             <button
               onClick={() => setIndex((i) => (i + 1) % items.length)}
               aria-label="Next media"
-              className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center cursor-pointer text-white transition-colors"
             >
               <ChevronRight className="w-5 h-5" aria-hidden="true" />
             </button>
@@ -134,7 +122,7 @@ export default function MediaLightbox({ items, startIndex, onClose }) {
               aria-selected={i === index}
               aria-label={att.name}
               onClick={() => setIndex(i)}
-              className={`w-12 h-12 rounded-lg overflow-hidden shrink-0 border-2 transition-all ${
+              className={`w-12 h-12 rounded-lg overflow-hidden shrink-0 border-2 transition-all cursor-pointer ${
                 i === index
                   ? 'border-indigo-400 opacity-100 scale-105'
                   : 'border-transparent opacity-50 hover:opacity-75'
