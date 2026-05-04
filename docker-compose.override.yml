@@ -1,0 +1,17 @@
+services:
+  frontend:
+    build: 
+      target: development
+    volumes:
+      - ./frontend:/frontend
+      - /frontend/node_modules
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+  backend:
+    build: 
+      target: development
+    volumes:
+      - ./backend:/backend
+      - /backend/node_modules
+    environment:
+      - CHOKIDAR_USEPOLLING=true
