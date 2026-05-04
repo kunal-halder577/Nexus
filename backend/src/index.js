@@ -1,3 +1,4 @@
+import "./docker-dns-fix.js";
 import dotenv from "dotenv/config";
 import app from './app.js';
 import { connectDB } from './database/config.js';
