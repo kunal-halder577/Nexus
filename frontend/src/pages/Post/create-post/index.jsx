@@ -70,11 +70,11 @@ export default function NexusFullPageCreate() {
   useEffect(() => {
     const handler = (e) => {
       // Use plainText to prevent publishing empty <p></p> blocks
-      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && plainText && !isLoading) handlePublish();
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && (plainText || attachments.length > 0) && !isLoading) handlePublish();
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [plainText]);
+  }, [plainText, attachments, isLoading]);
 
   const handlePublish = async () => {
     const htmlContent = content;
@@ -204,7 +204,7 @@ export default function NexusFullPageCreate() {
           isLoading={isLoading}
           onVisibilityChange={setVisibility}
           onPublish={handlePublish}
-          canPublish={plainText.length > 0 && !isLoading} // Uses plain text check
+          canPublish={(plainText.length > 0 || attachments.length > 0) && !isLoading} // Allows publish with only media
         />
 
         <main className="flex-1 w-full max-w-3xl mx-auto px-6 py-8 flex flex-col relative z-10 overflow-y-auto" role="main" aria-label="Post editor">
