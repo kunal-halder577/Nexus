@@ -50,6 +50,7 @@ export const uploadMediaToCloud = async (filepath, folder = 'media') => {
           }),
     };
   } catch (error) {
+    console.error("CLOUDINARY UPLOAD ERROR:", error);
     await fs.unlink(filepath).catch(err =>
       console.error('Failed to delete local file:', err)
     );
