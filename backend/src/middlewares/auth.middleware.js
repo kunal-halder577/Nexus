@@ -41,7 +41,7 @@ export const verifyRefreshToken = asyncHandler(async (req, res, next) => {
   const incomingRefreshToken = req.cookies?.refreshToken;
   const origin = req.headers.origin;
   
-  if (origin !== allowedOrigins) {
+  if (origin && !allowedOrigins.includes(origin)) {
     throw new ApiError(403, "CSRF blocked");
   }
   if (!incomingRefreshToken) {
