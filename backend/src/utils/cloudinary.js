@@ -66,7 +66,8 @@ export const uploadMultipleMedia = async (filePaths, folder = 'media') => {
   const failed = results.filter(r => r.status === 'rejected');
   if (failed.length > 0) {
     failed.forEach(f => console.error('Upload failed:', f.reason));
-    throw new Error('Some uploads failed');
+    const firstError = failed[0].reason?.message || 'Unknown Cloudinary error';
+    throw new Error(`Cloud upload failed: ${firstError}`);
   }
 
   return results.map(r => r.value);
