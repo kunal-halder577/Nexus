@@ -108,7 +108,8 @@ export const postApi = baseApi.injectEndpoints({
         method: "PATCH",
         body: patch,
       }),
-      invalidatesTags: (result, error, { id }) => [{ type: "Post", id }],
+      // Removed invalidatesTags to prevent infinite query reset to page 1
+      // Optimistic updates (below) already handle syncing the cache
       async onQueryStarted({ id, ...patch }, { dispatch, getState, queryFulfilled }) {
         const postUpdater = (post) => Object.assign(post, patch);
         const draftUpdater = (draft) => {
@@ -135,7 +136,8 @@ export const postApi = baseApi.injectEndpoints({
     // ✅ userId no longer needed from caller
     deletePost: builder.mutation({
       query: ({ id }) => ({ url: `/posts/${id}`, method: "DELETE" }),
-      invalidatesTags: (result, error, { id }) => [{ type: "Post", id }],
+      // Removed invalidatesTags to prevent infinite query reset to page 1
+      // Optimistic updates (below) already handle syncing the cache
       async onQueryStarted({ id }, { dispatch, getState, queryFulfilled }) {
         const draftRemover = (draft) => {
           draft.pages.forEach((page) => {
