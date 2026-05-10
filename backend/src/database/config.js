@@ -3,7 +3,7 @@ import { dbName, dbPassword, dbUsername } from "../constants.js";
 
 export const connectDB = async () => {
     try {
-        const URI = `mongodb://${dbUsername}:${dbPassword}@localhost:27017/${dbName}?authSource=admin`;
+        const URI = `mongodb://${dbUsername}:${dbPassword}@mongodb:27017/${dbName}?authSource=admin`;
         const connectionInstance = await mongoose.connect(URI);
         const mongoConHost = connectionInstance.connection.host;
         const mongoConPort = connectionInstance.connection.host;

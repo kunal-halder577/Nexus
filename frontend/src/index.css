@@ -1,5 +1,9 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@200;400&display=swap')
+
+
+@custom-variant dark (&:is(.dark *));
 
 @custom-variant dark (&:is(.dark *));
 
@@ -79,6 +83,16 @@
   --sidebar-ring: oklch(0.704 0.04 256.788);
 }
 
+/* Nexus Tiptap Editor Overrides */
+.custom-tiptap-wrapper .ProseMirror p.is-editor-empty:first-child::before {
+  color: hsl(var(--muted-foreground)) !important;
+  opacity: 0.4 !important;
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
 .dark {
   --background: oklch(0.129 0.042 264.695);
   --foreground: oklch(0.984 0.003 247.858);
@@ -119,5 +133,10 @@
   }
   body {
     @apply bg-background text-foreground;
+    overflow-y: scroll;
   }
+  body::-webkit-scrollbar { width: 6px; }
+  body::-webkit-scrollbar-track { background: transparent; }
+  body::-webkit-scrollbar-thumb { background: #6366f1; border-radius: 9999px; }
+  body::-webkit-scrollbar-thumb:hover { background: #818cf8; }
 }

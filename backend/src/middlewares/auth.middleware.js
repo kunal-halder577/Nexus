@@ -1,8 +1,9 @@
-import { accessTokenSecretKey, refreshTokenSecretKey } from "../constants";
-import User from "../models/user.model";
-import ApiError from "../utils/ApiError";
-import asyncHandler from "../utils/asyncHandler";
+import { accessTokenSecretKey, allowedOrigins, refreshTokenSecretKey } from "../constants.js";
+import User from "../models/user.model.js";
+import ApiError from "../utils/ApiError.js";
+import asyncHandler from "../utils/asyncHandler.js";
 import jwt from "jsonwebtoken"
+import bcrypt from "bcrypt"
 
 export const authCheck = asyncHandler(async(req, _, next) => {
     const authHeader = req.headers.authorization;
@@ -12,7 +13,7 @@ export const authCheck = asyncHandler(async(req, _, next) => {
     if(!accessToken) {
         throw new ApiError(401, 'unauthorized request.');
     }
-    if (!refreshTokenSecretKey) {
+    if (!accessTokenSecretKey) {
         throw new Error('JWT secrets are not defined');
     }
 
@@ -36,37 +37,64 @@ export const authCheck = asyncHandler(async(req, _, next) => {
 
     next();
 });
-export const verifyRefreshToken = asyncHandler(async(req, _, next) => {
-    const refreshToken = req.cookies?.refreshToken;
+export const verifyRefreshToken = asyncHandler(async (req, res, next) => {
+  const incomingRefreshToken = req.cookies?.refreshToken;
+  const origin = req.headers.origin;
+  
+  if (origin && !allowedOrigins.includes(origin)) {
+    throw new ApiError(403, "CSRF blocked");
+  }
+  if (!incomingRefreshToken) {
+    throw new ApiError(401, "Refresh token is required.");
+  }
 
-    if(!refreshToken) {
-        throw new ApiError(401, 'Refreshtoken is required.');
-    }
-    if (!refreshTokenSecretKey) {
-        throw new Error('JWT secrets are not defined');
-    }
+  if (!refreshTokenSecretKey) {
+    throw new Error("JWT secrets are not defined");
+  }
 
-    let decodedData;
+  let decodedData;
+  try {
+    decodedData = jwt.verify(incomingRefreshToken, refreshTokenSecretKey);
+  } catch (error) {
+    throw new ApiError(401, error.message || "Invalid session token.");
+  }
 
-    try {
-        decodedData = jwt.verify(refreshToken, refreshTokenSecretKey);
-    } catch (error) {
-        throw new ApiError(401, error.message || 'Invalid session token.');
-    }
-    const user = await User.findById(decodedData._id)
-    .select('+refreshToken isActive isBlocked');
+  const user = await User.findById(decodedData._id).select(
+    "+refreshToken isActive isBlocked"
+  );
 
-    if(!user) {
-        throw new ApiError(404, 'user not found.');
-    }
-    if (!user.isActive || user.isBlocked) {
-        throw new ApiError(403, 'Account is disabled.');
-    }
-    if(refreshToken !== user.refreshToken)  {
-        user.refreshToken = undefined;
-        await user.save({ validateBeforeSave: false });
-        throw new ApiError(401, 'Refresh token revoked.');
-    }
-    req.user = user;
-    next();
+  if (!user) {
+    throw new ApiError(404, "User not found.");
+  }
+
+  if (!user.refreshToken) {
+    throw new ApiError(401, "Session expired. Please login again.");
+  }
+
+  if (!user.isActive || user.isBlocked) {
+    throw new ApiError(403, "Account is disabled.");
+  }
+
+  const isRefreshTokenSame = await bcrypt.compare(
+    incomingRefreshToken,
+    user.refreshToken
+  );
+
+  if (!isRefreshTokenSame) {
+    user.refreshToken = undefined;
+    await user.save({ validateBeforeSave: false });
+
+    const cookieOptions = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+    };
+
+    res.clearCookie("refreshToken", cookieOptions);
+
+    throw new ApiError(401, "Refresh token revoked.");
+  }
+
+  req.user = user;
+  next();
 });

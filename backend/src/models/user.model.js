@@ -24,7 +24,7 @@ const userSchema = new Schema(
       required: true,
       lowercase: true,
       trim: true,
-      match: [/^[a-z0-9_]+$/, 'Invalid username'],
+      match: [/^[a-z0-9_]{3,20}$/, "Invalid username"],
     },
     name: {
       type: String,
@@ -54,6 +54,10 @@ const userSchema = new Schema(
       type: Boolean,
       default: false,
     },
+    isOnboarded: { 
+      type: Boolean, 
+      default: false 
+    },
     emailVerified: {
       type: Boolean,
       default: false,
@@ -63,6 +67,18 @@ const userSchema = new Schema(
     },
     avatarPublicId: {
       type: String,
+    },
+    stats: {
+      followerCount: {
+        type: Number,
+        default: 0,
+        min: 0
+      },
+      followingCount: {
+        type: Number,
+        default: 0,
+        min: 0
+      }
     },
     providers: {
       google: {
@@ -77,11 +93,10 @@ const userSchema = new Schema(
           select: false,
           validate: {
             validator: function (v) {
-              return /(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(v);
+              return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/.test(v);
             },
-            message: 'Password is too weak',
+            message: "Password is too weak",
           },
-          minLength: 8,
         },
       },
     },
@@ -119,10 +134,15 @@ userSchema.pre('validate', async function () {
 });
 userSchema.pre('save', async function () {
   const password = this.providers?.local?.password;
+  const refreshToken = this.refreshToken;
 
   if (password && this.isModified('providers.local.password')) {
     const salt = await bcrypt.genSalt();
     this.providers.local.password = await bcrypt.hash(password, salt);
+  }
+  if(refreshToken && this.isModified('refreshToken')) {
+    const salt = await bcrypt.genSalt();
+    this.refreshToken = await bcrypt.hash(refreshToken, salt);
   }
 });
 userSchema.set('toJSON', {
@@ -132,10 +152,12 @@ userSchema.set('toJSON', {
       age: ret.age,
       name: ret.name,
       email: ret.email,
+      stats: ret.stats,
       gender: ret.gender,
       username: ret.username,
       avatarUrl: ret.avatarUrl,
       avatarPublicId: ret.avatarPublicId,
+      isOnboarded: ret.isOnboarded,
       createdAt: ret.createdAt,
     };
   },
@@ -146,6 +168,7 @@ userSchema.virtual('profile').get(function () {
     name: this.name,
     email: this.email,
     avatarUrl: this.avatarUrl,
+    stats: this.stats,
   };
 });
 

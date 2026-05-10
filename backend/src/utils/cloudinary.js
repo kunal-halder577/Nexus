@@ -1,7 +1,8 @@
 import { v2 as cloudinary } from 'cloudinary';
 import { configDotenv } from 'dotenv';
-import fs from 'fs';
+import fs from 'fs/promises';
 configDotenv();
+
 // Configuration
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -9,44 +10,100 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// Upload an image
-export const uploadImageOnCloud = async (filepath, imageName = 'profile', folder = 'images') => {
+export const uploadMediaToCloud = async (filepath, folder = 'media') => {
   try {
     const uploadUrl = await cloudinary.uploader.upload(filepath, {
-      public_id: imageName,
-      folder: folder,
-      resource_type: 'image',
-      allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
-      timeout: 60000,
-      overwrite: true,
-      transformation: [
-        { width: 400, height: 400, crop: 'fill', gravity: 'face' },
-        { quality: 'auto', fetch_format: 'auto' },
-      ],
+      folder,
+      resource_type: 'auto', // ✅ handles image, video, gif automatically
+      allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'gif', 'mp4', 'webm', 'mov'],
+      timeout: 120000, // ✅ increase for video — 60s is too tight
+      use_filename: true,
+      unique_filename: false,
     });
 
-    //deleting from local server
-    fs.unlinkSync(filepath);
+    await fs.unlink(filepath);
+
+    const aspectRatio = +(uploadUrl.width / uploadUrl.height).toFixed(2);
+    const isVideo = uploadUrl.resource_type === 'video';
 
     return {
       url: uploadUrl.secure_url,
       publicId: uploadUrl.public_id,
+      resourceType: uploadUrl.resource_type, // 'image' | 'video'
+      width: uploadUrl.width,
+      height: uploadUrl.height,
+      aspectRatio,
+      duration: isVideo ? uploadUrl.duration : null, // ✅ only videos have this
+      thumbnailUrl: isVideo
+        // Cloudinary can generate a video thumbnail automatically
+        ? cloudinary.url(uploadUrl.public_id, {
+            resource_type: 'video',
+            format: 'jpg',        // grab a JPG frame
+            transformation: [{ width: 150, height: 150, crop: 'thumb' }],
+          })
+        : cloudinary.url(uploadUrl.public_id, {
+            width: 150,
+            height: 150,
+            crop: 'thumb',
+            gravity: 'face',
+            quality: 'auto',
+          }),
     };
   } catch (error) {
-    fs.unlinkSync(filepath);
+    console.error("CLOUDINARY UPLOAD ERROR:", error);
+    await fs.unlink(filepath).catch(err =>
+      console.error('Failed to delete local file:', err)
+    );
     throw new Error(error?.message || 'Cloud upload failed.');
   }
 };
 
-// Delete the image
-export const deleteImageFromCloud = async (publicId) => {
+export const uploadMultipleMedia = async (filePaths, folder = 'media') => {
+  const results = await Promise.allSettled(
+    filePaths.map(p => uploadMediaToCloud(p, folder))
+  );
+
+  const failed = results.filter(r => r.status === 'rejected');
+  if (failed.length > 0) {
+    failed.forEach(f => console.error('Upload failed:', f.reason));
+    const firstError = failed[0].reason?.message || 'Unknown Cloudinary error';
+    throw new Error(`Cloud upload failed: ${firstError}`);
+  }
+
+  return results.map(r => r.value);
+};
+
+export const deleteMediaFromCloud = async (publicId, resourceType = 'image') => {
   try {
     const result = await cloudinary.uploader.destroy(publicId, {
       invalidate: true,
-      resource_type: 'image',
+      resource_type: resourceType, // 'image' for images + gifs, 'video' for videos
     });
-    return result; // { result: "ok" }
+    return result; // { result: 'ok' } or { result: 'not found' }
   } catch (error) {
-    throw new Error(error?.message || 'Failed delete image from cloud.');
+    throw new Error(error?.message || 'Failed to delete media from cloud.');
   }
+};
+
+export const deleteMultipleMedia = async (mediaItems) => {
+  const images = mediaItems
+    .filter(m => m.resourceType === 'image') // covers jpg, png, webp, gif
+    .map(m => m.publicId);
+
+  const videos = mediaItems
+    .filter(m => m.resourceType === 'video') // covers mp4, webm, mov
+    .map(m => m.publicId);
+
+  const results = await Promise.allSettled([
+    images.length > 0 && cloudinary.api.delete_resources(images, {
+      resource_type: 'image',
+      invalidate: true,
+    }),
+    videos.length > 0 && cloudinary.api.delete_resources(videos, {
+      resource_type: 'video',
+      invalidate: true,
+    }),
+  ].filter(Boolean));
+
+  return results;
 };

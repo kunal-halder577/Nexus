@@ -1,0 +1,1 @@
+export { default } from '@/pages/Post/create-post/components/MediaLightBox.jsx';
