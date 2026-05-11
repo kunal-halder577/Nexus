@@ -1,8 +1,8 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
-import { selectCurrentUser } from '@/features/auth/authSlice';
-import { useGetFeedPostsInfiniteQuery } from '@/features/post/api/postApi';
-import FeedView from './FeedView';
+import { selectCurrentUser } from '@/features/auth/authSlice.js';
+import { useGetFeedPostsInfiniteQuery } from '@/features/post/api/postApi.js';
+import FeedView from './FeedView.jsx';
 import { Image } from 'lucide-react';
 
 function EmptyTab({ icon: Icon, message }) {

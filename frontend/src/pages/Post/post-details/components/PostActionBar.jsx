@@ -1,13 +1,13 @@
 import React, { useCallback } from 'react';
 import { Heart, MessageSquare, Share2, Bookmark } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/button.jsx';
 import {
   TooltipProvider,
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { useDislikePostMutation, useLikePostMutation } from '@/features/Like/api/likeApi';
+import { useDislikePostMutation, useLikePostMutation } from '@/features/Like/api/likeApi.js';
 import { toast } from 'sonner';
 
 const ActionButton = ({ icon: Icon, label, onClick, active, activeClass, hoverClass, filled }) => (

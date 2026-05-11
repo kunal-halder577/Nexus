@@ -1,6 +1,6 @@
 import React from 'react';
 import { ArrowLeft, Globe, Lock, Sparkles, Save, CheckCircle2, Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/button.jsx';
 import {
   Select,
   SelectContent,

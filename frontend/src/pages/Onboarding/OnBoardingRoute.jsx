@@ -6,7 +6,7 @@ import {
   selectIsAuthenticated,
   selectCurrentUser,
 } from "@/features/auth/authSlice.js";
-import { useThemeEffect } from "@/components/theme";
+import { useThemeEffect } from "@/components/theme.jsx";
 
 const OnboardingRoute = () => {
   useThemeEffect();

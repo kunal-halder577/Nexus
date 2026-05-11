@@ -1,4 +1,4 @@
-import { baseApi } from "@/lib/api/baseApi";
+import { baseApi } from "@/lib/api/baseApi.js";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 

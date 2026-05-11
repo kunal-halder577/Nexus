@@ -1,4 +1,4 @@
-import FeedContainer from "@/components/Feed/FeedContainer";
+import FeedContainer from "@/components/Feed/FeedContainer.jsx";
 
 const Home = () => {
   return <FeedContainer />

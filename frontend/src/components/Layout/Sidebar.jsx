@@ -12,11 +12,11 @@ import {
   SidebarMenuItem,
   useSidebar
 } from "@/components/ui/sidebar";
-import { buttonVariants } from "@/components/ui/button";
-import { ProfileDropdown } from './ProfileDropdown';
+import { buttonVariants } from "@/components/ui/button.jsx";
+import { ProfileDropdown } from './ProfileDropdown.jsx';
 import { Link, NavLink } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { selectCurrentUser } from '@/features/auth/authSlice';
+import { selectCurrentUser } from '@/features/auth/authSlice.js';
 
 const navItems = [
   { icon: Home,     label: "Home",          path: '/' },

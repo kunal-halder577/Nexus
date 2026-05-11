@@ -1,12 +1,12 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { useSelector } from "react-redux";
 import Loader from "@/components/Loader.jsx";
-import { useGetMeQuery } from "@/features/auth/api/authApi";
+import { useGetMeQuery } from "@/features/auth/api/authApi.js";
 import {
   selectIsAuthenticated,
   selectCurrentUser,
 } from "@/features/auth/authSlice";
-import { useThemeEffect } from "@/components/theme";
+import { useThemeEffect } from "@/components/theme.jsx";
 
 const ProtectedRoute = () => {
   useThemeEffect();

@@ -6,17 +6,17 @@ import { useUiStore } from '@/stores/ui.store.js';
 import Loader from '@/components/Loader.jsx';
 
 // --- SHADCN COMPONENTS ---
-import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button.jsx";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu.jsx";
 
-import WelcomeStep from './Welcome';
-import AvatarStep from './AvatarSetup';
-import InterestsStep from './InterestSetup';
-import { useOnboardingMutation } from '@/features/user/api/userApi';
+import WelcomeStep from './Welcome.jsx';
+import AvatarStep from './AvatarSetup.jsx';
+import InterestsStep from './InterestSetup.jsx';
+import { useOnboardingMutation } from '@/features/user/api/userApi.js';
 import { Navigate, useBlocker, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { selectCurrentUser } from '@/features/auth/authSlice';
-import { useGetMeQuery } from '@/features/auth/api/authApi';
+import { selectCurrentUser } from '@/features/auth/authSlice.js';
+import { useGetMeQuery } from '@/features/auth/api/authApi.js';
 import { toast } from 'sonner';
 
 // --- ZOD SCHEMAS ---

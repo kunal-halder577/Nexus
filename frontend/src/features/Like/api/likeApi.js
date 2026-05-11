@@ -1,7 +1,7 @@
 // ─── likeApi.js ──────────────────────────────────────────────────────────────
 // Updated patchPostLikeState to use the correct infinite query structure
 
-import { baseApi } from "@/lib/api/baseApi";
+import { baseApi } from "@/lib/api/baseApi.js";
 
 const POST_LIKERS    = "PostLikers";
 const COMMENT_LIKERS = "CommentLikers";

@@ -1,5 +1,5 @@
 import { useRouteError, isRouteErrorResponse, useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button.jsx";
 import { AlertTriangle, Home, ArrowLeft, Wifi } from "lucide-react";
 
 export default function GlobalErrorPage() {

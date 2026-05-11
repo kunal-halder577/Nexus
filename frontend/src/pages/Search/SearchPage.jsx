@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Search, Mic, SlidersHorizontal, Grid, Image as ImageIcon, FileText, Users, Loader2 } from 'lucide-react';
-import { Input } from '@/components/ui/input'; // 1. Import Shadcn Input
+import { Input } from '@/components/ui/input.jsx'; // 1. Import Shadcn Input
 
 // Importing your modular components
-import PeopleSection from './People';
-import PostsSection from './PostSection';
-import MediaSection from './Media';
-import { useLazySearchUsersQuery, useSearchUsersQuery } from '@/features/user/api/userApi';
+import PeopleSection from './People.jsx';
+import PostsSection from './PostSection.jsx';
+import MediaSection from './Media.jsx';
+import { useLazySearchUsersQuery, useSearchUsersQuery } from '@/features/user/api/userApi.js';
 import { useSearchParams } from 'react-router-dom';
 
 const NexusSearch = () => {

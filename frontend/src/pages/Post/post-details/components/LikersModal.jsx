@@ -1,16 +1,16 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import ReactDOM from 'react-dom';
 import { X, Heart, UserPlus, UserCheck } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar.jsx';
+import { Button } from '@/components/ui/button.jsx';
+import { cn } from '@/lib/utils.js';
 import { Link } from 'react-router-dom';
 import { useGetPostLikersQuery } from '@/features/Like/api/likeApi.js';
 import { useFollowUserMutation, useUnfollowUserMutation } from '@/features/follow/api/followApi.js';
 import { useSelector } from 'react-redux';
-import { selectCurrentUser } from '@/features/auth/authSlice';
+import { selectCurrentUser } from '@/features/auth/authSlice.js';
 import { toast } from 'sonner';
-import { useScrollLock } from '@/hooks/useScrollLock';
+import { useScrollLock } from '@/hooks/useScrollLock.js';
 
 const LIMIT = 20;
 

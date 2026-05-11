@@ -1,7 +1,7 @@
 import { useEffect } from "react"
-import { SidebarProvider } from "@/components/ui/sidebar"
-import LeftSidebar from "./Sidebar"
-import RightSidebar from "./Discovery"
+import { SidebarProvider } from "@/components/ui/sidebar.jsx"
+import LeftSidebar from "./Sidebar.jsx"
+import RightSidebar from "./Discovery.jsx"
 import { Outlet } from "react-router-dom"
 
 export default function AppLayout() {

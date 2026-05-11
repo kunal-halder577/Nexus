@@ -1,5 +1,5 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Button } from "@/components/ui/button.jsx";
+import { Card, CardContent, CardHeader } from "@/components/ui/card.jsx";
 import { motion } from "framer-motion";
 import { Aperture, ArrowRight } from "lucide-react";
 

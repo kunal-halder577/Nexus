@@ -1,17 +1,17 @@
 import React, { useCallback, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { useGetPostByIdQuery } from '@/features/post/api/postApi';
-import PostAuthorHeader from './components/PostAuthorHeader';
-import PostCaption from './components/PostCaption';
-import PostMediaGrid from './components/PostMediaGrid';
-import PostActionBar from './components/PostActionBar';
-import PostCommentSection from './components/PostCommentSection';
-import { cn } from '@/lib/utils';
-import LikersModal from './components/LikersModal';
-import PostNotFound from '@/pages/Error/PostNotFoundPage';
+import { Button } from '@/components/ui/button.jsx';
+import { Separator } from '@/components/ui/separator.jsx';
+import { useGetPostByIdQuery } from '@/features/post/api/postApi.js';
+import PostAuthorHeader from './components/PostAuthorHeader.jsx';
+import PostCaption from './components/PostCaption.jsx';
+import PostMediaGrid from './components/PostMediaGrid.jsx';
+import PostActionBar from './components/PostActionBar.jsx';
+import PostCommentSection from './components/PostCommentSection.jsx';
+import { cn } from '@/lib/utils.js';
+import LikersModal from './components/LikersModal.jsx';
+import PostNotFound from '@/pages/Error/PostNotFoundPage.jsx';
 
 const PostDetailPage = () => {
   const { id } = useParams();

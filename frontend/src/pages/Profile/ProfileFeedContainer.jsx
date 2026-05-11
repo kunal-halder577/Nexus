@@ -1,6 +1,6 @@
 import React from 'react';
 import Feed from '@/components/Feed/Feed.jsx';
-import { useGetUserPostsInfiniteQuery } from '@/features/post/api/postApi';
+import { useGetUserPostsInfiniteQuery } from '@/features/post/api/postApi.js';
 
 const ProfileFeedContainer = ({ userId, emptyState }) => {
   const { data, isLoading, isError, isFetching ,fetchNextPage, hasNextPage } = useGetUserPostsInfiniteQuery(userId);

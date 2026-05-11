@@ -7,17 +7,17 @@ import ProtectedRoute from "@/pages/Auth/Protected.jsx";
 import OnboardingRoute from "@/pages/Onboarding/OnBoardingRoute.jsx";
 
 import AppLayout from "@/components/Layout/AppLayout.jsx";
-import App from "@/App";
-import PublicRoute from "@/pages/Auth/Public";
-import Home from "@/pages/Home/Home";
-import ProfilePage from "@/pages/Profile/MyProfile";
-import ProfileEditPage from "@/pages/Profile/ProfileEdit";
-import SearchPage from "@/pages/Search/SearchPage";
-import OtherUserProfile from "@/pages/Profile/OtherProfile";
-import NexusFullPageCreate from "@/pages/Post/create-post";
-import PostDetailPage from "@/pages/Post/post-details/PostDetails";
-import GlobalErrorPage from "@/pages/Error/GlobalErrorPage";
-import NotFoundPage from "@/pages/Error/NotFoundPage";
+import App from "@/App.jsx";
+import PublicRoute from "@/pages/Auth/Public.jsx";
+import Home from "@/pages/Home/Home.jsx";
+import ProfilePage from "@/pages/Profile/MyProfile.jsx";
+import ProfileEditPage from "@/pages/Profile/ProfileEdit.jsx";
+import SearchPage from "@/pages/Search/SearchPage.jsx";
+import OtherUserProfile from "@/pages/Profile/OtherProfile.jsx";
+import NexusFullPageCreate from "@/pages/Post/create-post/index.jsx";
+import PostDetailPage from "@/pages/Post/post-details/PostDetails.jsx";
+import GlobalErrorPage from "@/pages/Error/GlobalErrorPage.jsx";
+import NotFoundPage from "@/pages/Error/NotFoundPage.jsx";
 
 const router = createBrowserRouter([
   // Authenticaion

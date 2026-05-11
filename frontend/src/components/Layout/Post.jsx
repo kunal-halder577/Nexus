@@ -1,5 +1,5 @@
 import { Heart, MessageCircle, Repeat2, Share } from "lucide-react";
-import { Avatar, AvatarFallback } from "../ui/avatar";
+import { Avatar, AvatarFallback } from "../ui/avatar.jsx";
 
 const PostItem = ({ name, username, time, content, likes, comments, reposts }) => (
   <article className="p-4 border-b border-border hover:bg-accent/50 transition-colors cursor-pointer">

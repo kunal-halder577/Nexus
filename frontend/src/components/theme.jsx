@@ -1,4 +1,4 @@
-import { useUiStore } from "@/stores/ui.store";
+import { useUiStore } from "@/stores/ui.store.js";
 import { useEffect } from "react";
 
 export const useThemeEffect = () => {

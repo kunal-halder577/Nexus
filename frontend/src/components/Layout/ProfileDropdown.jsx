@@ -8,10 +8,10 @@ import { useLogoutMutation } from "@/features/auth/api/authApi.js";
 import { baseApi } from "@/lib/api/baseApi.js";
 import { selectCurrentUser } from "@/features/auth/authSlice.js";
 import { logout as clientLogout } from "@/features/auth/authAction.js";
-import { useUiStore } from "@/stores/ui.store";
+import { useUiStore } from "@/stores/ui.store.js";
 
 // UI Imports
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.jsx";
 import {
   DropdownMenu,
   DropdownMenuContent,

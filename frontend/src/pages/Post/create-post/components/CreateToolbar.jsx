@@ -1,7 +1,7 @@
 import React from 'react';
 import { Image as ImageIcon, Video, Smile, MoreHorizontal } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { MAX_CHARS } from '../mediaUtils';
+import { Button } from '@/components/ui/button.jsx';
+import { MAX_CHARS } from '../mediaUtils.js';
 
 export default function CreateToolbar({
   content,

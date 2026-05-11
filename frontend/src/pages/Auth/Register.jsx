@@ -8,7 +8,7 @@ import { FcGoogle } from "react-icons/fc";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 
 // UI Components
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button.jsx";
 import {
   Card,
   CardContent,
@@ -17,7 +17,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ui/input.jsx";
 
 import {
   Form,
@@ -27,7 +27,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Separator } from "@/components/ui/separator";
+import { Separator } from "@/components/ui/separator.jsx";
 import { useRegisterMutation } from "@/features/auth/api/authApi.js";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
