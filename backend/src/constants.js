@@ -1,4 +1,5 @@
 export const nodeEnv = process.env.NODE_ENV;
+export const mongoUri = process.env.MONGO_URI;
 export const dbName = process.env.MONGODB_DBNAME;
 export const dbUsername = process.env.MONGO_INITDB_ROOT_USERNAME;
 export const dbPassword = process.env.MONGO_INITDB_ROOT_PASSWORD;
