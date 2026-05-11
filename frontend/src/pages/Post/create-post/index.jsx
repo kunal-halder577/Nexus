@@ -2,16 +2,16 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Image as ImageIcon } from 'lucide-react';
 import { toast } from 'sonner'; // <-- 1. Import Sonner
 
-import Editor from '@/components/Editor';
+import Editor from '@/components/Editor.jsx';
 
-import { useDraft }        from './useDraft';
-import { isAllowed, revokeAll, DRAFT_KEY } from './mediaUtils';
-import MediaLightbox       from './components/MediaLightBox';
-import AttachmentGrid      from './components/AttachmentGrid';
-import CreateHeader        from './components/CreateHeader';
-import CreateToolbar       from './components/CreateToolbar';
-import DraftBanner         from './components/Draftbanner';
-import { useCreatePostMutation } from '@/features/post/api/postApi';
+import { useDraft }        from './useDraft.js';
+import { isAllowed, revokeAll, DRAFT_KEY } from './mediaUtils.js';
+import MediaLightbox       from './components/MediaLightBox.jsx';
+import AttachmentGrid      from './components/AttachmentGrid.jsx';
+import CreateHeader        from './components/CreateHeader.jsx';
+import CreateToolbar       from './components/CreateToolbar.jsx';
+import DraftBanner         from './components/Draftbanner.jsx';
+import { useCreatePostMutation } from '@/features/post/api/postApi.js';
 import { useNavigate } from 'react-router-dom';
 
 export default function NexusFullPageCreate() {

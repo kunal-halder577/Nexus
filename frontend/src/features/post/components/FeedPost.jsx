@@ -1,16 +1,16 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.jsx";
+import { Button } from "@/components/ui/button.jsx";
+import { Badge } from "@/components/ui/badge.jsx";
+import { Card } from "@/components/ui/card.jsx";
 import { MessageSquare, Heart, Share2, MoreHorizontal, PlayCircle } from "lucide-react";
 import parse from 'html-react-parser';
 import DOMPurify from 'dompurify';
-import { useDeletePostMutation, useUpdatePostMutation } from '../api/postApi';
-import MediaLightbox from '@/components/shared/MediaLightbox';
+import { useDeletePostMutation, useUpdatePostMutation } from '../api/postApi.js';
+import MediaLightbox from '@/components/Shared/MediaLightBox.jsx';
 import { useSelector } from 'react-redux';
-import { selectCurrentUser } from '@/features/auth/authSlice';
+import { selectCurrentUser } from '@/features/auth/authSlice.js';
 import { toast } from 'sonner';
 import PostActionMenu from './PostActionMenu.jsx';
 import { useEditPost } from '@/hooks/useEditPost.js';
@@ -20,7 +20,7 @@ import {
   useUnfollowUserMutation,
   useGetFollowStatusQuery,
 } from '@/features/follow/api/followApi.js';
-import { useDislikePostMutation, useLikePostMutation } from '@/features/Like/api/likeApi';
+import { useDislikePostMutation, useLikePostMutation } from '@/features/Like/api/likeApi.js';
 
 // ─── MIME type helper ─────────────────────────────────────────────────────────
 const EXTENSION_TO_MIME = {

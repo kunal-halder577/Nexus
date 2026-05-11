@@ -1,4 +1,4 @@
-import { baseURL } from "@/lib/constants";
+import { baseURL } from "@/lib/constants.js";
 import axios from "axios";
 
 export const api = axios.create({

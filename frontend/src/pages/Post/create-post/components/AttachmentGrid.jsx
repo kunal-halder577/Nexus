@@ -1,6 +1,6 @@
 import React from 'react';
 import { X, ZoomIn, Video } from 'lucide-react';
-import { isImage, isGif, isVideo } from '../mediaUtils';
+import { isImage, isGif, isVideo } from '../mediaUtils.js';
 
 export default function AttachmentGrid({ attachments, onRemove, onOpen }) {
   if (!attachments.length) return null;

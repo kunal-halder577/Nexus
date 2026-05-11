@@ -1,7 +1,7 @@
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar.jsx';
+import { Badge } from '@/components/ui/badge.jsx';
+import { Button } from '@/components/ui/button.jsx';
+import { Card } from '@/components/ui/card.jsx';
 import { Heart, MessageCircle, MoreHorizontal } from 'lucide-react';
 
 const PostsSection = () => {

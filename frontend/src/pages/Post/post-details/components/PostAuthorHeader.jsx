@@ -1,16 +1,16 @@
 import React, { useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { MoreHorizontal } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { useDeletePostMutation, useUpdatePostMutation } from '@/features/post/api/postApi';
-import PostActionMenu from '@/features/post/components/PostActionMenu';
-import { selectCurrentUser } from '@/features/auth/authSlice';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar.jsx';
+import { Badge } from '@/components/ui/badge.jsx';
+import { Button } from '@/components/ui/button.jsx';
+import { useDeletePostMutation, useUpdatePostMutation } from '@/features/post/api/postApi.js';
+import PostActionMenu from '@/features/post/components/PostActionMenu.jsx';
+import { selectCurrentUser } from '@/features/auth/authSlice.js';
 import { useSelector } from 'react-redux';
 import { toast } from 'sonner';
-import { useEditPost } from '@/hooks/useEditPost';
-import EditPostModal from '@/components/Shared/EditPostModal';
+import { useEditPost } from '@/hooks/useEditPost.js';
+import EditPostModal from '@/components/Shared/EditPostModal.jsx';
 import {
   useFollowUserMutation,
   useUnfollowUserMutation,

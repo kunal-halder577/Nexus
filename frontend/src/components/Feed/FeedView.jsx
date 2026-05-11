@@ -1,9 +1,9 @@
 import React from 'react';
 import { Image } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import Feed from './Feed';
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.jsx";
+import { Button } from "@/components/ui/button.jsx";
+import { Textarea } from "@/components/ui/textarea.jsx";
+import Feed from './Feed.jsx';
 
 const FeedView = ({ 
     user, 

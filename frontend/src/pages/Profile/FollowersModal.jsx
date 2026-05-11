@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import ReactDOM from 'react-dom';
 import { X, UserPlus, UserCheck, Users } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar.jsx';
+import { Button } from '@/components/ui/button.jsx';
+import { cn } from '@/lib/utils.js';
 import { Link } from 'react-router-dom';
 import {
   useGetFollowersQuery,
@@ -12,7 +12,7 @@ import {
   useUnfollowUserMutation,
 } from '@/features/follow/api/followApi';
 import { useSelector } from 'react-redux';
-import { selectCurrentUser } from '@/features/auth/authSlice';
+import { selectCurrentUser } from '@/features/auth/authSlice.js';
 import { toast } from 'sonner';
 
 // ─── Individual user row ───────────────────────────────────────────────────────

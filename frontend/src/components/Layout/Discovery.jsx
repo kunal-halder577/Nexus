@@ -1,9 +1,9 @@
 import React from 'react';
 import { Search, MoreHorizontal, TrendingUp, Flame, Sparkles } from 'lucide-react';
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { Input } from "@/components/ui/input.jsx";
+import { Button } from "@/components/ui/button.jsx";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.jsx";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area.jsx";
 import { useLocation, useNavigate } from 'react-router-dom';
 
 const RightSidebar = () => {

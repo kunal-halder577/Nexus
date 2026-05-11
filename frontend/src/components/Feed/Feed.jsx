@@ -1,4 +1,4 @@
-import FeedPost from '@/features/post/components/FeedPost';
+import FeedPost from '@/features/post/components/FeedPost.jsx';
 import { FileText, Loader2 } from 'lucide-react';
 import { useEffect } from 'react';
 import { useInView } from 'react-intersection-observer';

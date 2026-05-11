@@ -13,25 +13,25 @@ import {
   MessageCircle,
   FileText,
 } from 'lucide-react';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button, buttonVariants } from '@/components/ui/button';
+import { Card } from '@/components/ui/card.jsx';
+import { Badge } from '@/components/ui/badge.jsx';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar.jsx';
+import { Button, buttonVariants } from '@/components/ui/button.jsx';
 import { Link, useParams } from 'react-router-dom';
-import { cn } from '@/lib/utils';
-import { useGetUserByIdQuery } from '@/features/user/api/userApi';
+import { cn } from '@/lib/utils.js';
+import { useGetUserByIdQuery } from '@/features/user/api/userApi.js';
 import { useSelector } from 'react-redux';
-import { selectCurrentUser } from '@/features/auth/authSlice';
-import ProfileFeedContainer from './ProfileFeedContainer';
+import { selectCurrentUser } from '@/features/auth/authSlice.js';
+import ProfileFeedContainer from './ProfileFeedContainer.jsx';
 import {
   useFollowUserMutation,
   useGetFollowStatusQuery,
   useUnfollowUserMutation,
 } from '@/features/follow/api/followApi';
 import { toast } from 'sonner';
-import FollowersModal from './FollowersModal';
-import AvatarLightbox from './AvatarLightbox';
-import UserNotFound from '../Error/UserNotFoundPage';
+import FollowersModal from './FollowersModal.jsx';
+import AvatarLightbox from './AvatarLightbox.jsx';
+import UserNotFound from '../Error/UserNotFoundPage.jsx';
 
 // ─── Stat button — accessible, no layout shift on label change ────────────────
 function StatButton({ count, label, onClick }) {

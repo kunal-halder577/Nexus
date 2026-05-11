@@ -1,7 +1,7 @@
 import React from 'react';
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar.jsx";
+import { Button } from "@/components/ui/button.jsx";
+import { Skeleton } from "@/components/ui/skeleton.jsx";
 import { useNavigate } from 'react-router-dom';
 
 const PeopleSection = ({ users = [], isLoading = false }) => {

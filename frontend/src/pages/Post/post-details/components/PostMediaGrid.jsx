@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { PlayCircle } from 'lucide-react';
-import MediaLightbox from '@/components/shared/MediaLightbox';
+import MediaLightbox from '@/components/Shared/MediaLightBox.jsx';
 
 const toLibItems = (mediaArr) =>
   mediaArr.map((item, i) => ({

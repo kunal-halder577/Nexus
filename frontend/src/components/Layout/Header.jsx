@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Bell } from "lucide-react";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs.jsx";
+import { Button } from "@/components/ui/button.jsx";
 import { ProfileDropdown } from "./ProfileDropdown.jsx";
 
 const Header = () => {

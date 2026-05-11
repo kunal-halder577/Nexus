@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button.jsx";
 import { 
   Card, 
   CardContent, 
@@ -7,7 +7,7 @@ import {
   CardHeader, 
   CardTitle 
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ui/input.jsx";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { 
   Form,
@@ -23,9 +23,9 @@ import { useForm } from "react-hook-form";
 import { FcGoogle } from "react-icons/fc";
 import { z } from "zod"
 import { Link, Navigate, useNavigate } from "react-router-dom";
-import { Separator } from "@/components/ui/separator";
-import { useGetMeQuery, useLoginMutation } from "@/features/auth/api/authApi";
-import useAuthStore from "@/stores/auth.store";
+import { Separator } from "@/components/ui/separator.jsx";
+import { useGetMeQuery, useLoginMutation } from "@/features/auth/api/authApi.js";
+import useAuthStore from "@/stores/auth.store.js";
 import Loader from "@/components/Loader.jsx";
 import { toast } from "sonner";
 

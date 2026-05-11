@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Download, ChevronLeft, ChevronRight, Video } from 'lucide-react';
-import { isImage, isGif, isVideo, formatSize } from '../mediaUtils';
-import { useScrollLock } from '@/hooks/useScrollLock';
+import { isImage, isGif, isVideo, formatSize } from '../mediaUtils.js';
+import { useScrollLock } from '@/hooks/useScrollLock.js';
 
 export default function MediaLightbox({ items, startIndex, onClose }) {
   const [index, setIndex] = useState(startIndex);

@@ -5,7 +5,7 @@ import * as z from "zod";
 import { Camera, Loader2, Save, Upload, User, Check, X } from "lucide-react"; // Added 'X' icon
 
 // Shadcn UI Imports
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button.jsx";
 import {
   Form,
   FormControl,
@@ -22,12 +22,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { ImageCropperDialog } from "@/components/ImageCropperDialog";
+import { Input } from "@/components/ui/input.jsx";
+import { Textarea } from "@/components/ui/textarea.jsx";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar.jsx";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card.jsx";
+import { Separator } from "@/components/ui/separator.jsx";
+import { ImageCropperDialog } from "@/components/ImageCropperDialog.jsx";
 import { toast } from "sonner";
 
 // --- Zod Schema ---

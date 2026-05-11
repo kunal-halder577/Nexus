@@ -5,14 +5,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button.jsx';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar.jsx';
 import { Loader2, Check, AlertCircle, Info } from 'lucide-react';
 import DOMPurify from 'dompurify';
 import { useSelector } from 'react-redux';
-import { selectCurrentUser } from '@/features/auth/authSlice';
-import { cn } from '@/lib/utils';
-import NexusEditor from '../Editor';
+import { selectCurrentUser } from '@/features/auth/authSlice.js';
+import { cn } from '@/lib/utils.js';
+import NexusEditor from '../Editor.jsx';
 
 const MAX_CHARS = 500;
 

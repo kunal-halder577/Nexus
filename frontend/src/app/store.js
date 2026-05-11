@@ -6,8 +6,8 @@ import {
   FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER 
 } from 'redux-persist';
 import storage from 'redux-persist/lib/storage'; 
-import { baseApi } from '@/lib/api/baseApi';
-import authReducer from '@/features/auth/authSlice';
+import { baseApi } from '@/lib/api/baseApi.js';
+import authReducer from '@/features/auth/authSlice.js';
 
 // 1. Configure Persistence
 const authPersistConfig = {

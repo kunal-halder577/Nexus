@@ -1,11 +1,11 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { Loader2, SendHorizonal, MessageSquareDashed } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Separator } from '@/components/ui/separator';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar.jsx';
+import { Button } from '@/components/ui/button.jsx';
+import { Textarea } from '@/components/ui/textarea.jsx';
+import { Separator } from '@/components/ui/separator.jsx';
 import { useSelector } from 'react-redux';
-import { selectCurrentUser } from '@/features/auth/authSlice';
+import { selectCurrentUser } from '@/features/auth/authSlice.js';
 
 // ─── Moved outside — one instance shared across all CommentItems ─────────────
 const formatTime = (dateString) => {

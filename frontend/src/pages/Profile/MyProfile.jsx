@@ -10,18 +10,18 @@ import {
   Grid,
   FileText,
 } from 'lucide-react';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button, buttonVariants } from '@/components/ui/button';
+import { Card } from '@/components/ui/card.jsx';
+import { Badge } from '@/components/ui/badge.jsx';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar.jsx';
+import { Button, buttonVariants } from '@/components/ui/button.jsx';
 import { useSelector } from 'react-redux';
-import { selectCurrentUser } from '@/features/auth/authSlice';
+import { selectCurrentUser } from '@/features/auth/authSlice.js';
 import { Link } from 'react-router-dom';
-import { cn } from '@/lib/utils';
-import ProfileFeedContainer from './ProfileFeedContainer';
-import FollowersModal from './FollowersModal';
-import AvatarLightbox from './AvatarLightbox';
-import { useGetUserByIdQuery } from '@/features/user/api/userApi';
+import { cn } from '@/lib/utils.js';
+import ProfileFeedContainer from './ProfileFeedContainer.jsx';
+import FollowersModal from './FollowersModal.jsx';
+import AvatarLightbox from './AvatarLightbox.jsx';
+import { useGetUserByIdQuery } from '@/features/user/api/userApi.js';
 
 // ─── Stat button — accessible, no layout shift on label change ────────────────
 // `w-20` is wide enough for any count + label combo. `tabular-nums` prevents

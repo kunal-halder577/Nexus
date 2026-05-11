@@ -1,6 +1,6 @@
 import React from 'react';
 import { X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/button.jsx';
 
 export default function DraftBanner({ draft, onRestore, onDiscard }) {
   if (!draft) return null;

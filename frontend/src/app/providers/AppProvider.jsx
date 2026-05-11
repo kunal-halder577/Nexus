@@ -1,8 +1,8 @@
 import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
-import { store, persistor } from '../store'; // Importing the named exports
+import { store, persistor } from '../store.js';
 import { Toaster } from 'sonner';
-import { useUiStore } from '@/stores/ui.store';
+import { useUiStore } from '@/stores/ui.store.js';
 
 const AppProvider = ({ children }) => {
   const theme = useUiStore(s => s.theme);

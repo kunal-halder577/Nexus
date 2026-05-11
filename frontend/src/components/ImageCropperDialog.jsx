@@ -1,8 +1,8 @@
 import { useState, useCallback } from "react";
 import Cropper from "react-easy-crop";
 import { getCroppedImg } from "@/lib/canvasUtils.js"; // Adjust path as needed
-import { Button } from "@/components/ui/button";
-import { Slider } from "@/components/ui/slider";
+import { Button } from "@/components/ui/button.jsx";
+import { Slider } from "@/components/ui/slider.jsx";
 import {
   Dialog,
   DialogContent,

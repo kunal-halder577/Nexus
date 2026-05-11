@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { DRAFT_KEY } from './mediaUtils';
+import { DRAFT_KEY } from './mediaUtils.js';
 
 export function useDraft(content, visibility) {
   const [saveState, setSaveState] = useState('idle');

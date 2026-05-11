@@ -6,7 +6,7 @@ import Placeholder from '@tiptap/extension-placeholder';
 import CharacterCount from '@tiptap/extension-character-count';
 import Underline from '@tiptap/extension-underline';
 import { Bold, Italic, Underline as UnderlineIcon, Strikethrough } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils.js';
 
 export default function NexusEditor({ content, setContent, maxChars = 500, compact = false }) {
     const editor = useEditor({

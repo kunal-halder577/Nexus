@@ -1,4 +1,4 @@
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/components/ui/badge.jsx';
 import {Heart, Image, Maximize2, Play } from 'lucide-react';
 
 const MediaSection = () => {
