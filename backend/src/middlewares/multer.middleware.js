@@ -1,13 +1,7 @@
 import multer from 'multer';
 import fs from 'fs';
 import path from 'path';
-
-const UPLOAD_DIR = './public/uploads';
-
-// Create once at startup, not on every request
-if (!fs.existsSync(UPLOAD_DIR)) {
-  fs.mkdirSync(UPLOAD_DIR, { recursive: true });
-}
+import os from 'os'; // Added the OS module
 
 const ALLOWED_MIME_TYPES = new Set([
   'image/jpeg',
@@ -25,7 +19,8 @@ const FILE_SIZE_LIMITS = {
 };
 
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, UPLOAD_DIR),
+  // Use the Render server's built-in temporary directory
+  destination: (req, file, cb) => cb(null, os.tmpdir()),
 
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
@@ -52,8 +47,8 @@ const upload = multer({
   storage,
   fileFilter,
   limits: {
-    fileSize: FILE_SIZE_LIMITS.video, // ✅ set to highest ceiling (video)
-    files: 10,                         // Multer enforces per-type via fileFilter above
+    fileSize: FILE_SIZE_LIMITS.video, // set to highest ceiling (video)
+    files: 10,                        // Multer enforces per-type via fileFilter above
   },
 });
 
