@@ -8,7 +8,7 @@ import { MessageSquare, Heart, Share2, MoreHorizontal, PlayCircle } from "lucide
 import parse from 'html-react-parser';
 import DOMPurify from 'dompurify';
 import { useDeletePostMutation, useUpdatePostMutation } from '../api/postApi.js';
-import MediaLightbox from '@/components/shared/MediaLightbox.jsx';
+import MediaLightbox from '@/components/Shared/MediaLightBox.jsx';
 import { useSelector } from 'react-redux';
 import { selectCurrentUser } from '@/features/auth/authSlice.js';
 import { toast } from 'sonner';
