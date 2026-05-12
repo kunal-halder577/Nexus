@@ -66,7 +66,7 @@ export const register = asyncHandler(async (req, res) => {
   const baseCookieOptions = {
     httpOnly: true,
     secure: nodeEnv === 'production',
-    sameSite: 'lax',
+    sameSite: nodeEnv === 'production'? 'none':'lax',
   };
 
   const refreshTokenCookieOptions = {
@@ -140,7 +140,7 @@ export const login = asyncHandler(async (req, res) => {
    const baseCookieOptions = {
     httpOnly: true,
     secure: nodeEnv === 'production',
-    sameSite: 'lax',
+    sameSite: nodeEnv === 'production'? 'none':'lax',
   }
 
   const refreshTokenCookieOptions = {
@@ -163,7 +163,7 @@ export const logout = asyncHandler(async (req, res) => {
    const baseCookieOptions = {
     httpOnly: true,
     secure: nodeEnv === 'production',
-    sameSite: 'lax',
+    sameSite: nodeEnv === 'production'? 'none':'lax',
   }
 
   const refreshTokenCookieOptions = {
@@ -186,8 +186,8 @@ export const refreshAccessToken = asyncHandler(async (req, res) => {
    const baseCookieOptions = {
     httpOnly: true,
     secure: nodeEnv === 'production',
-    sameSite: 'lax',
-  }
+    sameSite: nodeEnv === 'production'? 'none':'lax',
+  } 
 
   const refreshTokenCookieOptions = {
     ...baseCookieOptions,
@@ -268,7 +268,7 @@ export const getMe = asyncHandler(async (req, res) => {
     res.clearCookie("refreshToken", {
       httpOnly: true,
       secure: nodeEnv === "production",
-      sameSite: "lax",
+      sameSite: nodeEnv === 'production'? 'none':'lax',
     });
 
     throw new ApiError(401, "Refresh token revoked.");
