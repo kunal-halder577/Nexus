@@ -463,7 +463,7 @@ export default function OtherUserProfile() {
           <div
             role="tablist"
             aria-label="Profile content"
-            className="flex items-center w-full border-b bg-background/80 sticky top-0 -mt-10 pt-10 z-40 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60"
+            className="flex items-center w-full border-b bg-background/80 sticky top-0 -mt-10 pt-10 z-20 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60"
           >
             <TabButton
               id="posts"

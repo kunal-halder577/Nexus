@@ -103,7 +103,7 @@ const NexusSearch = () => {
       <div className="container max-w-4xl mx-auto px-4">
         
         {/* Sticky Header & Search */}
-        <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-xl border-b border-border/40 pt-6 transition-all">
+        <header className="sticky top-0 z-20 bg-background/95 backdrop-blur-xl border-b border-border/40 pt-6 transition-all">
           <div className="relative flex items-center group mb-1">
             
             {/* Search Icon (or Loading Spinner) */}
