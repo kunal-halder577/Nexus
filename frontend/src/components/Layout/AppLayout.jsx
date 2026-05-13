@@ -34,7 +34,7 @@ export default function AppLayout() {
         <section className="flex flex-col flex-1 min-w-0 border-r border-border overflow-hidden">
 
           {/* Scrollable content — pb-16 reserves space so content isn't hidden under the fixed nav */}
-          <div id="feed-scroll" className="flex-1 overflow-y-auto">
+          <div id="feed-scroll" className="flex-1 overflow-y-auto" style={{ scrollbarGutter: 'stable' }}>
             <div className={`max-w-2xl mx-auto w-full relative ${showBtmNav ? "pb-16 md:pb-0" : ""}`}>
               <Outlet />
             </div>
