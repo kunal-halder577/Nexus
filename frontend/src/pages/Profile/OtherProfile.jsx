@@ -210,7 +210,7 @@ export default function OtherUserProfile() {
         <Card className="overflow-hidden border-none sm:border shadow-none sm:shadow-lg">
 
           {/* Banner */}
-          <div className="h-48 w-full relative overflow-hidden">
+          <div className="h-32 sm:h-48 w-full relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-700" />
             <div
               className="absolute inset-0 opacity-50"
@@ -235,8 +235,8 @@ export default function OtherUserProfile() {
             )}
           </div>
 
-          <div className="px-6 pb-6 relative">
-            <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between -mt-12 mb-4 gap-4">
+          <div className="px-4 sm:px-6 pb-6 relative">
+            <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between -mt-10 sm:-mt-12 mb-4 gap-4">
 
               {/* Clickable avatar */}
               <button
@@ -244,14 +244,14 @@ export default function OtherUserProfile() {
                 className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 group"
                 aria-label="View profile picture"
               >
-                <Avatar className="h-32 w-32 border border-border/50 bg-background transition-all group-hover:ring-2 group-hover:ring-ring group-hover:ring-offset-1 group-hover:brightness-90 cursor-pointer">
+                <Avatar className="h-24 w-24 sm:h-32 sm:w-32 border border-border/50 bg-background transition-all group-hover:ring-2 group-hover:ring-ring group-hover:ring-offset-1 group-hover:brightness-90 cursor-pointer">
                   <AvatarImage src={avatarSrc} alt={user?.name || 'User avatar'} />
-                  <AvatarFallback className="text-4xl">{avatarFallback}</AvatarFallback>
+                  <AvatarFallback className="text-3xl sm:text-4xl">{avatarFallback}</AvatarFallback>
                 </Avatar>
               </button>
 
               {/* Action buttons */}
-              <div className="flex gap-2 w-full sm:w-auto mt-2 sm:mt-0">
+              <div className="flex flex-wrap gap-2 w-full sm:w-auto mt-2 sm:mt-0">
                 {isOwnProfile ? (
                   <>
                     <Link
@@ -434,7 +434,7 @@ export default function OtherUserProfile() {
             </div>
 
             {/* Stats — <StatButton> for a11y on clickable ones */}
-            <div className="flex gap-6 mt-6 pt-6 border-t border-border/50">
+            <div className="flex gap-4 sm:gap-6 mt-6 pt-6 border-t border-border/50">
               <StatButton
                 count={followerCount}
                 label={followerLabel}

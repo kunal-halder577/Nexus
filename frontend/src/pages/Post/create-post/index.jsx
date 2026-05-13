@@ -207,7 +207,7 @@ export default function NexusFullPageCreate() {
           canPublish={(plainText.length > 0 || attachments.length > 0) && !isLoading} // Allows publish with only media
         />
 
-        <main className="flex-1 w-full max-w-3xl mx-auto px-6 py-8 flex flex-col relative z-10 overflow-y-auto" role="main" aria-label="Post editor">
+        <main className="flex-1 w-full max-w-3xl mx-auto px-3 py-4 sm:px-6 sm:py-8 flex flex-col relative z-10 overflow-y-auto" role="main" aria-label="Post editor">
           <Editor content={content} setContent={setContent} maxChars={500} />
 
           <AttachmentGrid

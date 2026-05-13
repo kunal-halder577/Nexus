@@ -238,7 +238,7 @@ export default function UpdateProfilePage({
             <CardTitle>Profile Picture</CardTitle>
             <CardDescription>Click the image to upload a new avatar.</CardDescription>
           </CardHeader>
-          <CardContent className="flex items-center gap-6">
+          <CardContent className="flex flex-col items-center gap-4 sm:flex-row sm:items-center sm:gap-6">
             
             <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
               <Avatar className="h-24 w-24 border-2 border-border">

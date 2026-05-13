@@ -33,7 +33,7 @@ export default function CreateHeader({
   }[saveState];
   const navigate = useNavigate();
   return (
-    <header className="flex-none z-40 bg-background/60 backdrop-blur-2xl border-b border-border/20 px-6 py-4 flex items-center justify-between">
+    <header className="flex-none z-40 bg-background/60 backdrop-blur-2xl border-b border-border/20 px-3 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
       <div className="flex items-center gap-4">
         <Button
           variant="ghost"
@@ -45,7 +45,7 @@ export default function CreateHeader({
           <ArrowLeft className="w-5 h-5" aria-hidden="true" />
         </Button>
         <div className="flex items-center gap-2">
-          <span className="text-base font-semibold text-muted-foreground tracking-widest uppercase">
+          <span className="text-base font-semibold text-muted-foreground tracking-widest uppercase hidden sm:inline">
             Drafting
           </span>
           {saveIndicator && (
@@ -65,15 +65,18 @@ export default function CreateHeader({
         <Select value={visibility} onValueChange={onVisibilityChange}>
           <SelectTrigger
             aria-label="Post visibility"
-            className="w-[150px] h-10 border-none bg-transparent hover:bg-muted/30 focus:ring-0 focus:ring-offset-0 shadow-none transition-colors text-muted-foreground cursor-pointer hover:text-foreground justify-start gap-2"
+            className="w-auto sm:w-[150px] h-10 border-none bg-transparent hover:bg-muted/30 focus:ring-0 focus:ring-offset-0 shadow-none transition-colors text-muted-foreground cursor-pointer hover:text-foreground justify-start gap-2"
           >
             {visibility === 'public' ? (
               <Globe className="w-4 h-4 shrink-0 text-indigo-400" aria-hidden="true" />
             ) : (
               <Lock className="w-4 h-4 shrink-0 text-indigo-400" aria-hidden="true" />
             )}
-            <span className="truncate">
+            <span className="truncate hidden sm:inline">
               <SelectValue placeholder="Visibility" />
+            </span>
+            <span className="truncate sm:hidden">
+              <SelectValue placeholder="" />
             </span>
           </SelectTrigger>
           <SelectContent
@@ -91,7 +94,7 @@ export default function CreateHeader({
           disabled={!canPublish}
           title="Publish (⌘↩)"
           aria-keyshortcuts="Control+Enter Meta+Enter"
-          className="rounded-full px-6 gap-2 bg-indigo-500 hover:bg-indigo-600 text-white disabled:opacity-100 disabled:bg-indigo-500/40 disabled:text-white/70 font-medium cursor-pointer transition-all duration-200"
+          className="rounded-full px-4 sm:px-6 gap-2 bg-indigo-500 hover:bg-indigo-600 text-white disabled:opacity-100 disabled:bg-indigo-500/40 disabled:text-white/70 font-medium cursor-pointer transition-all duration-200"
         >
           {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
             {isLoading ? 'Publishing…' : 'Publish'}

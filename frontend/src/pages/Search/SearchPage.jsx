@@ -103,7 +103,7 @@ const NexusSearch = () => {
       <div className="container max-w-4xl mx-auto px-4">
         
         {/* Sticky Header & Search */}
-        <header className="sticky top-0 z-20 bg-background/95 backdrop-blur-xl border-b border-border/40 pt-6 transition-all">
+        <header className="sticky top-0 z-20 bg-background/95 backdrop-blur-xl border-b border-border/40 pt-4 sm:pt-6 transition-all">
           <div className="relative flex items-center group mb-1">
             
             {/* Search Icon (or Loading Spinner) */}
@@ -126,7 +126,7 @@ const NexusSearch = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Search users (Press Enter)..."
-              className="w-full bg-muted/40 border-border/60 rounded-xl py-6 pl-12 pr-24 text-base shadow-sm focus-visible:ring-2 focus-visible:ring-indigo-500/20 focus-visible:border-indigo-500 focus-visible:bg-background transition-all"
+              className="w-full bg-muted/40 border-border/60 rounded-xl py-6 pl-12 pr-16 sm:pr-24 text-base shadow-sm focus-visible:ring-2 focus-visible:ring-indigo-500/20 focus-visible:border-indigo-500 focus-visible:bg-background transition-all"
             />
 
             <div className="absolute right-4 flex gap-3 text-muted-foreground z-10">
