@@ -114,44 +114,44 @@ export default function OtherUserProfile() {
   const isFollowActionPending = isFollowingLoading || isUnfollowingLoading;
 
   // ─── Follow handler ──────────────────────────────────────────────────────────
-  const handleFollow = useCallback(async () => {
-    try {
-      await followUser(id).unwrap();
-      const HEART_COLORS = ['#f472b6','#fb7185','#e879f9','#f9a8d4','#c084fc','#ff6b8a'];
-      const SWAYS        = [-10, 6, -4, 8, -7, 3];
-      const SIZES        = ['11px','9px','13px','8px','11px','10px'];
-      const DELAYS       = [0, 120, 60, 200, 90, 160];
-      const DURATIONS    = [1100, 1300, 1050, 1400, 1150, 1250];
-      const OFFSETS      = [-22, -8, 4, 16, -14, 26];
+  const handleFollow = useCallback(() => {
+    // 1. Fire optimistic UI effects immediately
+    const HEART_COLORS = ['#f472b6','#fb7185','#e879f9','#f9a8d4','#c084fc','#ff6b8a'];
+    const SWAYS        = [-10, 6, -4, 8, -7, 3];
+    const SIZES        = ['11px','9px','13px','8px','11px','10px'];
+    const DELAYS       = [0, 120, 60, 200, 90, 160];
+    const DURATIONS    = [1100, 1300, 1050, 1400, 1150, 1250];
+    const OFFSETS      = [-22, -8, 4, 16, -14, 26];
 
-      setFollowParticles(
-        Array.from({ length: 6 }, (_, i) => ({
-          id: i,
-          color: HEART_COLORS[i],
-          size: SIZES[i],
-          delay: DELAYS[i],
-          duration: DURATIONS[i],
-          offsetX: OFFSETS[i],
-          sway: SWAYS[i],
-        }))
-      );
-      setIsJustFollowed(true);
-      setTimeout(() => {
-        setIsJustFollowed(false);
-        setFollowParticles([]);
-      }, 1700);
-    } catch (err) {
+    setFollowParticles(
+      Array.from({ length: 6 }, (_, i) => ({
+        id: i,
+        color: HEART_COLORS[i],
+        size: SIZES[i],
+        delay: DELAYS[i],
+        duration: DURATIONS[i],
+        offsetX: OFFSETS[i],
+        sway: SWAYS[i],
+      }))
+    );
+    setIsJustFollowed(true);
+    setTimeout(() => {
+      setIsJustFollowed(false);
+      setFollowParticles([]);
+    }, 1700);
+
+    // 2. Fire network request in background
+    followUser(id).unwrap().catch((err) => {
       toast.error(err?.data?.message || err?.message || 'Failed to follow user.');
-    }
+    });
   }, [followUser, id]);
 
   // ─── Unfollow handler ────────────────────────────────────────────────────────
-  const handleUnfollow = useCallback(async () => {
-    try {
-      await unfollowUser(id).unwrap();
-    } catch (err) {
+  const handleUnfollow = useCallback(() => {
+    // Fire network request in background
+    unfollowUser(id).unwrap().catch((err) => {
       toast.error(err?.data?.message || err?.message || 'Failed to unfollow user.');
-    }
+    });
   }, [unfollowUser, id]);
 
   const handleFollowToggle = isFollowing ? handleUnfollow : handleFollow;
@@ -299,7 +299,7 @@ export default function OtherUserProfile() {
 
                       <Button
                         onClick={handleFollowToggle}
-                        disabled={isFollowActionPending || isLoadingFollowStatus}
+                        disabled={isLoadingFollowStatus}
                         variant={isFollowing ? 'outline' : 'default'}
                         className={cn(
                           'relative h-9 w-32 overflow-hidden transition-colors duration-700 cursor-pointer',
@@ -319,7 +319,7 @@ export default function OtherUserProfile() {
                         {/* Layer 1 — Follow (not following, idle) */}
                         <span className={cn(
                           'absolute inset-0 flex items-center justify-center gap-1.5 transition-opacity duration-150',
-                          !isFollowing && !isFollowActionPending && !isLoadingFollowStatus
+                          !isFollowing && !isLoadingFollowStatus
                             ? 'opacity-100' : 'opacity-0 pointer-events-none'
                         )}>
                           <UserPlus className="w-4 h-4" /> Follow
@@ -328,7 +328,7 @@ export default function OtherUserProfile() {
                         {/* Layer 2 — Following (following, idle) */}
                         <span className={cn(
                           'absolute inset-0 flex items-center justify-center gap-1.5 transition-opacity duration-150',
-                          isFollowing && !isFollowActionPending && !isLoadingFollowStatus
+                          isFollowing && !isLoadingFollowStatus
                             ? 'opacity-100' : 'opacity-0 pointer-events-none'
                         )}>
                           <UserCheck
@@ -338,15 +338,6 @@ export default function OtherUserProfile() {
                               : {}}
                           />
                           Following
-                        </span>
-
-                        {/* Layer 3 — spinner (action in flight) */}
-                        <span className={cn(
-                          'absolute inset-0 flex items-center justify-center gap-1.5 transition-opacity duration-150',
-                          isFollowActionPending ? 'opacity-100' : 'opacity-0 pointer-events-none'
-                        )}>
-                          <span className="h-3.5 w-3.5 rounded-full border-2 border-current border-t-transparent animate-spin" />
-                          {isFollowing ? 'Unfollowing…' : 'Following…'}
                         </span>
                       </Button>
 

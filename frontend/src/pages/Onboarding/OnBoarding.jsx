@@ -134,9 +134,10 @@ export default function Onboarding() {
     // 3. Send to Backend
     try {
       const response = await onboarding(payload).unwrap();
-      toast.success(`Welcome! ${response.data?.user?.name}`);
+      const finalName = response?.data?.user?.name || response?.user?.name || formData.displayName || 'to Nexus';
+      toast.success(finalName === 'to Nexus' ? `Welcome ${finalName}!` : `Welcome, ${finalName}!`);
     } catch (error) {
-      toast.error(error.message || 'Failed to onboard user.');
+      toast.error(error?.data?.message || error.message || 'Failed to onboard user.');
     }
   };
 

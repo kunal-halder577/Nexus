@@ -20,23 +20,33 @@ function UserRow({ user, onClose }) {
   const currentUser = useSelector(selectCurrentUser);
   const isOwn = user._id === currentUser?._id;
 
-  const [followUser, { isLoading: isFollowing }] = useFollowUserMutation();
-  const [unfollowUser, { isLoading: isUnfollowing }] = useUnfollowUserMutation();
+  const [followUser, { isLoading: isFollowingLoading }] = useFollowUserMutation();
+  const [unfollowUser, { isLoading: isUnfollowingLoading }] = useUnfollowUserMutation();
 
-  const isFollowing_ = user?.isFollowing ?? false;
-  const isPending = isFollowing || isUnfollowing;
+  const [localIsFollowing, setLocalIsFollowing] = useState(user?.isFollowing ?? false);
 
-  const handleToggle = useCallback(async () => {
-    try {
-      if (isFollowing_) {
-        await unfollowUser(user._id).unwrap();
-      } else {
-        await followUser(user._id).unwrap();
-      }
-    } catch (err) {
-      toast.error(err?.data?.message || 'Action failed.');
+  useEffect(() => {
+    setLocalIsFollowing(user?.isFollowing ?? false);
+  }, [user?.isFollowing]);
+
+  const handleToggle = useCallback(() => {
+    const prev = localIsFollowing;
+    setLocalIsFollowing(!prev);
+    
+    if (prev) {
+      unfollowUser(user._id).unwrap().catch((err) => {
+        setLocalIsFollowing(prev);
+        toast.error(err?.data?.message || 'Action failed.');
+      });
+    } else {
+      followUser(user._id).unwrap().catch((err) => {
+        setLocalIsFollowing(prev);
+        toast.error(err?.data?.message || 'Action failed.');
+      });
     }
-  }, [isFollowing_, followUser, unfollowUser, user._id]);
+  }, [localIsFollowing, followUser, unfollowUser, user._id]);
+
+  const isActionPending = isFollowingLoading || isUnfollowingLoading;
 
   const avatarSrc = user?.avatarUrl || '';
   const fallback = user?.name?.charAt(0)?.toUpperCase() || 'U';
@@ -72,19 +82,17 @@ function UserRow({ user, onClose }) {
       {!isOwn && (
         <Button
           size="sm"
-          variant={isFollowing_ ? 'outline' : 'default'}
-          disabled={isPending}
+          variant={localIsFollowing ? 'outline' : 'default'}
+          disabled={isActionPending}
           onClick={handleToggle}
           className={cn(
             'h-8 w-24 shrink-0 text-xs font-medium relative overflow-hidden transition-colors duration-300 cursor-pointer',
-            isFollowing_
+            localIsFollowing
               ? 'border-border text-muted-foreground hover:border-destructive/50 hover:bg-destructive/10 hover:text-destructive'
               : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm shadow-indigo-500/20'
           )}
         >
-          {isPending? (
-            <span className="h-3 w-3 rounded-full border-2 border-current border-t-transparent animate-spin" />
-          ) : isFollowing_ ? (
+          {localIsFollowing ? (
             <span className="flex items-center gap-1">
               <UserCheck className="w-3.5 h-3.5" /> Following
             </span>
