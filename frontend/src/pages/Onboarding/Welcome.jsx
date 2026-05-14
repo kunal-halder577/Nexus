@@ -44,8 +44,8 @@ const WelcomeStep = ({ onNext }) => (
         transition={{ delay: 0.2, duration: 0.5 }}
       >
        <h1 className="
-          text-center text-4xl font-['Outfit'] font-extralight uppercase tracking-[0.5em] 
-          text-foreground pl-[0.5em]
+          text-center text-2xl sm:text-4xl font-['Outfit'] font-extralight uppercase tracking-[0.3em] sm:tracking-[0.5em] 
+          text-foreground pl-[0.3em] sm:pl-[0.5em]
         ">
           Nexus
         </h1>

@@ -16,7 +16,7 @@ export default function CreateToolbar({
 
   return (
     <footer
-      className="flex-none w-full max-w-3xl mx-auto px-6 pb-6 pt-2 relative z-10 bg-background/80 backdrop-blur-md border-t border-border/20"
+      className="flex-none w-full max-w-3xl mx-auto px-3 sm:px-6 pb-6 pt-2 relative z-10 bg-background/80 backdrop-blur-md border-t border-border/20"
       role="toolbar"
       aria-label="Attachment tools"
     >
@@ -93,7 +93,7 @@ export default function CreateToolbar({
               className={`transition-opacity duration-150 ${content.length > 0 ? 'opacity-100' : 'opacity-0'}`}
             >
               {content.length}{' '}
-              <span className="opacity-80" aria-hidden="true">/ {MAX_CHARS}</span>
+              <span className="opacity-80 hidden sm:inline" aria-hidden="true">/ {MAX_CHARS}</span>
             </span>
           </div>
 
@@ -111,7 +111,7 @@ export default function CreateToolbar({
       </div>
 
       <p
-        className={`text-xs text-muted-foreground/80 text-right mt-1 select-none transition-opacity duration-150 ${
+        className={`text-xs text-muted-foreground/80 text-right mt-1 select-none transition-opacity duration-150 hidden sm:block ${
           content.trim() ? 'opacity-100' : 'opacity-0'
         }`}
         aria-hidden="true"

@@ -143,7 +143,7 @@ export default function UserProfile() {
         <Card className="overflow-hidden border-none sm:border shadow-none sm:shadow-lg">
 
           {/* Banner */}
-          <div className="h-48 w-full bg-gradient-to-r from-slate-900 to-slate-800 relative">
+          <div className="h-32 sm:h-48 w-full bg-gradient-to-r from-slate-900 to-slate-800 relative">
             <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1579546929518-9e396f3cc809?auto=format&fit=crop&q=80')] bg-cover bg-center opacity-40 mix-blend-overlay" />
             {profile?.isPremium && (
               <div className="absolute top-4 right-4">
@@ -154,8 +154,8 @@ export default function UserProfile() {
             )}
           </div>
 
-          <div className="px-6 pb-6 relative">
-            <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between -mt-12 mb-4 gap-4">
+          <div className="px-4 sm:px-6 pb-6 relative">
+            <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between -mt-10 sm:-mt-12 mb-4 gap-4">
 
               {/* Clickable avatar */}
               <button
@@ -163,9 +163,9 @@ export default function UserProfile() {
                 className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 group"
                 aria-label="View profile picture"
               >
-                <Avatar className="h-32 w-32 border border-border/50 transition-all group-hover:ring-2 group-hover:ring-ring group-hover:ring-offset-1 group-hover:brightness-90 cursor-pointer">
+                <Avatar className="h-24 w-24 sm:h-32 sm:w-32 border border-border/50 transition-all group-hover:ring-2 group-hover:ring-ring group-hover:ring-offset-1 group-hover:brightness-90 cursor-pointer">
                   <AvatarImage src={avatarSrc} alt={profile?.name || 'User avatar'} />
-                  <AvatarFallback className="text-4xl">{avatarFallback}</AvatarFallback>
+                  <AvatarFallback className="text-3xl sm:text-4xl">{avatarFallback}</AvatarFallback>
                 </Avatar>
               </button>
 
@@ -238,7 +238,7 @@ export default function UserProfile() {
             </div>
 
             {/* Stats — all <button> for a11y: keyboard nav + screen reader support */}
-            <div className="flex gap-6 mt-6 pt-6 border-t border-border/50">
+            <div className="flex gap-4 sm:gap-6 mt-6 pt-6 border-t border-border/50">
               <StatButton
                 count={followerCount}
                 label={followerLabel}
@@ -267,7 +267,7 @@ export default function UserProfile() {
           <div
             role="tablist"
             aria-label="Profile content"
-            className="flex items-center w-full border-b bg-background/80 sticky top-0 -mt-10 pt-10 z-40 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60"
+            className="flex items-center w-full border-b bg-background/80 sticky top-0 -mt-10 pt-10 z-20 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60"
           >
             {[
               { id: 'posts', icon: Grid,      label: 'Posts' },

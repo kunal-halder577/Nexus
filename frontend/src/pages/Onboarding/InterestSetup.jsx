@@ -98,7 +98,7 @@ const InterestsStep = ({ data, updateData, errors, onSubmit, onBack, onSkip, isL
                 className={`
                   relative group flex flex-col items-center justify-center gap-3 
                   p-4 rounded-2xl border transition-all duration-300
-                  aspect-square
+                  aspect-square min-h-[80px]
                   ${isSelected 
                     ? 'border-foreground bg-foreground text-background shadow-[0_0_20px_-5px_rgba(255,255,255,0.3)]' 
                     : 'border-white/5 bg-white/5 text-muted-foreground hover:bg-white/10 hover:border-white/10'

@@ -30,7 +30,7 @@ const Header = () => {
   return (
     <header
       className={`
-        sticky top-0 z-50 w-full transition-transform duration-300 ease-in-out
+        sticky top-0 z-20 w-full transition-transform duration-300 ease-in-out
         ${isVisible ? "translate-y-0" : "-translate-y-full"}
       `}
     >
