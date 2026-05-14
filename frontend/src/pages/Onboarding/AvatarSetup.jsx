@@ -178,6 +178,12 @@ const AvatarStep = ({
             <Input
               value={data.displayName}
               onChange={(e) => updateData("displayName", e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  onNext();
+                }
+              }}
               onFocus={() => setIsFocused(true)} // Track Focus
               onBlur={() => setIsFocused(false)} // Track Blur
               className="

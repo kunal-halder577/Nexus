@@ -18,6 +18,7 @@ import NexusFullPageCreate from "@/pages/Post/create-post/index.jsx";
 import PostDetailPage from "@/pages/Post/post-details/PostDetails.jsx";
 import GlobalErrorPage from "@/pages/Error/GlobalErrorPage.jsx";
 import NotFoundPage from "@/pages/Error/NotFoundPage.jsx";
+import SettingsPage from "@/pages/Settings/Settings.jsx";
 
 const router = createBrowserRouter([
   // Authenticaion
@@ -85,6 +86,10 @@ const router = createBrowserRouter([
               {
                 path: "post/:id",
                 element: <PostDetailPage />
+              },
+              {
+                path: "settings",
+                element: <SettingsPage />
               },
               {
                 path: "*",
