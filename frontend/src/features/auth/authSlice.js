@@ -51,6 +51,16 @@ const authSlice = createSlice({
         }
       )
 
+      // --- THE GOOGLE LOGIN ACTION ---
+      .addMatcher(
+        authApi.endpoints.googleLogin.matchFulfilled,
+        (state, { payload }) => {
+          state.token = payload.data?.accessToken;
+          state.user = payload.data?.user;
+          state.isAuthenticated = true;
+        }
+      )
+
       // --- THE REGISTER ACTION --- 
       .addMatcher(
         authApi.endpoints.register.matchFulfilled, 
