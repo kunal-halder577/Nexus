@@ -1,10 +1,15 @@
 import bcrypt from "bcrypt";
 import User from '../models/user.model.js';
 import ApiError from '../utils/ApiError.js';
-import { accessTokenExpiry, accessTokenSecretKey, nodeEnv, refreshTokenSecretKey } from '../constants.js';
+import { accessTokenExpiry, accessTokenSecretKey, googleClientId, nodeEnv, refreshTokenSecretKey } from '../constants.js';
 import ApiResponse from '../utils/ApiResponse.js';
 import asyncHandler from '../utils/asyncHandler.js';
+import { OAuth2Client } from "google-auth-library";
 import jwt from "jsonwebtoken";
+import axios from "axios";
+
+//GOOGLE Client initialization
+const client = new OAuth2Client(googleClientId);
 
 export const register = asyncHandler(async (req, res) => {
   const { username, email, password, confirmPassword } = req.body;
@@ -341,4 +346,88 @@ export const changePassword = asyncHandler(async (req, res) => {
   return res
   .status(200)
   .json(new ApiResponse(200, 'Password updated successfully.', {}));
+});
+export const googleLogin = asyncHandler(async (req, res) => {
+  const { credential, access_token } = req.body;
+  if (!credential && !access_token) throw new ApiError(400, 'Google credential or access_token is required.');
+
+  let sub, picture, email, name;
+
+  if (credential) {
+    const ticket = await client.verifyIdToken({
+      idToken: credential,
+      audience: googleClientId,
+    });
+
+    const payload = ticket.getPayload();
+    if (!payload) throw new ApiError(400, 'Invalid Google token.');
+    ({ sub, picture, email, name } = payload);
+  } else if (access_token) {
+    const { data } = await axios.get('https://www.googleapis.com/oauth2/v3/userinfo', {
+      headers: { Authorization: `Bearer ${access_token}` }
+    });
+    sub = data.sub;
+    email = data.email;
+    name = data.name;
+    picture = data.picture;
+  }
+
+  let isNewUser = false;
+  let user = await User.findOne({ "providers.google.id": sub });
+
+  if (!user) {
+    // Optional: check email collision
+    const emailExists = await User.findOne({ email });
+    if (emailExists) throw new ApiError(409, 'Email already registered with another account.');
+
+    isNewUser = true;
+    
+    let baseUsername = email.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '').toLowerCase();
+    if (baseUsername.length === 0) baseUsername = 'user';
+    let username = `${baseUsername.slice(0, 15)}${Math.floor(1000 + Math.random() * 9000)}`;
+
+    user = await User.create({
+      name,
+      email,
+      username,
+      avatarUrl: picture,
+      providers: { google: { id: sub } },
+      isOnboarded: true,
+    });
+  }
+
+  const accessToken = user.generateAccessToken();
+  const refreshToken = user.generateRefreshToken();
+
+  await User.findByIdAndUpdate(user._id, { refreshToken });
+
+  const safeUser = {
+    _id: user._id,
+    name: user.name,
+    email: user.email,
+    avatar: user.avatarUrl,
+    role: user.role,
+    isOnboarded: user.isOnboarded,
+  };
+
+  const response = { 
+    accessToken, 
+    user: safeUser 
+  };
+
+  const baseCookieOptions = {
+    httpOnly: true,
+    secure: nodeEnv === 'production',
+    sameSite: nodeEnv === 'production' ? 'none' : 'lax',
+  };
+  
+  const refreshTokenCookieOptions = {
+    ...baseCookieOptions,
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  }
+
+  return res
+    .status(isNewUser ? 201 : 200)
+    .cookie("refreshToken", refreshToken, refreshTokenCookieOptions)
+    .json(new ApiResponse(isNewUser ? 201 : 200, "User logged in successfully", response));
 });
