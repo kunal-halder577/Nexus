@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import {
+  ArrowLeft,
   MapPin,
   Link as LinkIcon,
   Calendar,
@@ -17,7 +18,7 @@ import { Card } from '@/components/ui/card.jsx';
 import { Badge } from '@/components/ui/badge.jsx';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar.jsx';
 import { Button, buttonVariants } from '@/components/ui/button.jsx';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils.js';
 import { useGetUserByIdQuery } from '@/features/user/api/userApi.js';
 import { useSelector } from 'react-redux';
@@ -77,8 +78,8 @@ function TabButton({ id, active, onClick, icon, label }) {
       aria-controls={`tabpanel-${id}`}
       onClick={onClick}
       className={cn(
-        'flex-1 pb-3 pt-2 text-sm font-medium transition-all relative cursor-pointer',
-        active ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
+        'flex-1 py-2 text-sm transition-all relative cursor-pointer',
+        active ? 'text-foreground font-medium' : 'text-muted-foreground hover:text-foreground'
       )}
     >
       <span className="flex items-center justify-center gap-2">
@@ -86,7 +87,7 @@ function TabButton({ id, active, onClick, icon, label }) {
         {label}
       </span>
       {active && (
-        <span className="absolute bottom-0 left-0 w-full h-[2px] bg-indigo-600 rounded-t-full" />
+        <span className="absolute bottom-0 left-1/2 -translate-x-1/2 h-1 w-12 rounded-full bg-indigo-500" />
       )}
     </button>
   );
@@ -94,6 +95,7 @@ function TabButton({ id, active, onClick, icon, label }) {
 
 // ─── Main Component ────────────────────────────────────────────────────────────
 export default function OtherUserProfile() {
+  const navigate = useNavigate();
   const { id } = useParams();
   const [activeTab, setActiveTab]     = useState('posts');
   const [avatarOpen, setAvatarOpen]   = useState(false);
@@ -212,6 +214,13 @@ export default function OtherUserProfile() {
           {/* Banner */}
           <div className="h-32 sm:h-48 w-full relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-700" />
+            <button
+              onClick={() => navigate(-1)}
+              className="fixed top-4 left-4 z-50 p-2 bg-black/30 text-white rounded-full backdrop-blur-md border border-white/10 hover:bg-black/50 transition-colors cursor-pointer sm:hidden"
+              aria-label="Go back"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
             <div
               className="absolute inset-0 opacity-50"
               style={{

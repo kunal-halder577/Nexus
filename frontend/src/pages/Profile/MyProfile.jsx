@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import {
+  ArrowLeft,
   MapPin,
   Link as LinkIcon,
   Calendar,
@@ -16,7 +17,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar.jsx'
 import { Button, buttonVariants } from '@/components/ui/button.jsx';
 import { useSelector } from 'react-redux';
 import { selectCurrentUser } from '@/features/auth/authSlice.js';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils.js';
 import ProfileFeedContainer from './ProfileFeedContainer.jsx';
 import FollowersModal from './FollowersModal.jsx';
@@ -63,6 +64,7 @@ function EmptyTab({ icon: Icon, message }) {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 export default function UserProfile() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab]     = useState('posts');
   const [avatarOpen, setAvatarOpen]   = useState(false);
   const [followModal, setFollowModal] = useState(null); // null | 'followers' | 'following'
@@ -145,6 +147,15 @@ export default function UserProfile() {
           {/* Banner */}
           <div className="h-32 sm:h-48 w-full bg-gradient-to-r from-slate-900 to-slate-800 relative">
             <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1579546929518-9e396f3cc809?auto=format&fit=crop&q=80')] bg-cover bg-center opacity-40 mix-blend-overlay" />
+            
+            <button
+              onClick={() => navigate(-1)}
+              className="fixed top-4 left-4 z-50 p-2 bg-black/30 text-white rounded-full backdrop-blur-md border border-white/10 hover:bg-black/50 transition-colors cursor-pointer sm:hidden"
+              aria-label="Go back"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+
             {profile?.isPremium && (
               <div className="absolute top-4 right-4">
                 <Badge className="bg-black/30 text-white backdrop-blur-md border-white/10">
@@ -281,9 +292,9 @@ export default function UserProfile() {
                 id={`tab-${id}`}
                 onClick={() => setActiveTab(id)}
                 className={cn(
-                  'flex-1 pb-3 pt-2 text-sm font-medium transition-all relative cursor-pointer',
+                  'flex-1 py-2 text-sm transition-all relative cursor-pointer',
                   activeTab === id
-                    ? 'text-foreground'
+                    ? 'text-foreground font-medium'
                     : 'text-muted-foreground hover:text-foreground'
                 )}
               >
@@ -292,7 +303,7 @@ export default function UserProfile() {
                   {label}
                 </span>
                 {activeTab === id && (
-                  <span className="absolute bottom-0 left-0 w-full h-[2px] bg-indigo-600 rounded-t-full" />
+                  <span className="absolute bottom-0 left-1/2 -translate-x-1/2 h-1 w-12 rounded-full bg-indigo-500" />
                 )}
               </button>
             ))}
