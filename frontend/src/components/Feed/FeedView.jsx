@@ -21,13 +21,14 @@ const FeedView = ({
     <div className="flex flex-col w-full h-full pb-20">
       
       {/* ==================== 1. STICKY HEADER & TABS ==================== */}
-      <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b border-border">
-        <div className="flex w-full">
-          <button className="flex-1 py-4 font-bold text-foreground border-b-4 border-primary hover:bg-accent transition-colors">
-            For You
+      <header className="sticky top-0 z-10 h-12 bg-background/80 backdrop-blur-md border-b border-border flex items-center">
+        <div className="flex w-full h-full">
+          <button className="relative flex-1 flex items-center justify-center h-full hover:bg-accent/50 transition-colors cursor-pointer">
+            <span className="text-sm font-semibold text-foreground">For You</span>
+            <div className="absolute bottom-0 h-1 w-12 rounded-t-full bg-primary"></div>
           </button>
-          <button className="flex-1 py-4 font-medium text-muted-foreground border-b-4 border-transparent hover:bg-accent transition-colors">
-            Following
+          <button className="relative flex-1 flex items-center justify-center h-full hover:bg-accent/50 transition-colors cursor-pointer">
+            <span className="text-sm font-medium text-muted-foreground">Following</span>
           </button>
         </div>
       </header>
