@@ -8,3 +8,5 @@ export const accessTokenExpiry = process.env.ACCESS_TOKEN_EXPIRY;
 export const refreshTokenSecretKey = process.env.REFRESH_TOKEN_SECRET_KEY;
 export const refreshTokenExpiry = process.env.REFRESH_TOKEN_EXPIRY;
 export const allowedOrigins = ["http://localhost:5173", "http://frontend:5173", "https://nexus.kunalhalder.site"];
+export const googleClientId = process.env.GOOGLE_CLIENT_ID;
+export const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;

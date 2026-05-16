@@ -1,11 +1,12 @@
 import { Router } from 'express';
-import { changePassword, getMe, login, logout, refreshAccessToken, register } from '../controllers/auth.controller.js';
+import { changePassword, getMe, googleLogin, login, logout, refreshAccessToken, register } from '../controllers/auth.controller.js';
 import { authCheck, verifyRefreshToken } from '../middlewares/auth.middleware.js';
 
 const router = Router();
 
 router.route('/register').post(register);
 router.route('/login').post(login);
+router.route('/google/login').post(googleLogin);
 router.route('/refresh/access-token').post(verifyRefreshToken, refreshAccessToken);
 router.route('/me').get(getMe);
 
