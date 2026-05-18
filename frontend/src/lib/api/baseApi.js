@@ -15,6 +15,18 @@ const baseQuery = fetchBaseQuery({
   },
 });
 
+let isRefreshing = false;
+let refreshSubscribers = [];
+
+const onRefreshed = (token) => {
+  refreshSubscribers.forEach((cb) => cb(token));
+  refreshSubscribers = [];
+};
+
+const addRefreshSubscriber = (cb) => {
+  refreshSubscribers.push(cb);
+};
+
 const baseQueryWithReAuth = async (args, api, extraOptions) => {
   let result = await baseQuery(args, api, extraOptions);
 
@@ -48,27 +60,44 @@ const baseQueryWithReAuth = async (args, api, extraOptions) => {
       return result;
     }
 
-    // C. Attempt to Refresh the Token
-    const refreshResult = await baseQuery(
-      {
-        url: '/auth/refresh/access-token',
-        method: 'POST',
-      },
-      api,
-      extraOptions
-    );
+    // C. Attempt to Refresh the Token using a Mutex to prevent race conditions
+    if (!isRefreshing) {
+      isRefreshing = true;
+      const refreshResult = await baseQuery(
+        {
+          url: '/auth/refresh/access-token',
+          method: 'POST',
+        },
+        api,
+        extraOptions
+      );
 
-    if (refreshResult?.data?.accessToken) {
-      const newToken = refreshResult.data.accessToken;
-      
-      // Update the store with the new token
-      api.dispatch(tokenReceived(newToken));
+      if (refreshResult?.data?.accessToken) {
+        const newToken = refreshResult.data.accessToken;
+        
+        // Update the store with the new token
+        api.dispatch(tokenReceived(newToken));
+        
+        isRefreshing = false;
+        onRefreshed(newToken);
 
-      // Retry the original request with the new token
-      result = await baseQuery(args, api, extraOptions);
+        // Retry the original request with the new token
+        result = await baseQuery(args, api, extraOptions);
+      } else {
+        // Refresh failed (Session expired) -> Logout user
+        isRefreshing = false;
+        refreshSubscribers = [];
+        api.dispatch(logout());
+      }
     } else {
-      // Refresh failed (Session expired) -> Logout user
-      api.dispatch(logout());
+      // If already refreshing, wait for the refresh to complete
+      await new Promise((resolve) => {
+        addRefreshSubscriber((token) => {
+          resolve(token);
+        });
+      });
+      // Retry the original request with the new token that was fetched by the other request
+      result = await baseQuery(args, api, extraOptions);
     }
   }
   return result;
