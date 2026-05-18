@@ -399,7 +399,9 @@ export const googleLogin = asyncHandler(async (req, res) => {
   const accessToken = user.generateAccessToken();
   const refreshToken = user.generateRefreshToken();
 
-  await User.findByIdAndUpdate(user._id, { refreshToken });
+  const userToUpdate = await User.findById(user._id);
+  userToUpdate.refreshToken = refreshToken;
+  await userToUpdate.save({ validateBeforeSave: false });
 
   const safeUser = {
     _id: user._id,
