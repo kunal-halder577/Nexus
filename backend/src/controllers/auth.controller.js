@@ -76,7 +76,8 @@ export const register = asyncHandler(async (req, res) => {
 
   const refreshTokenCookieOptions = {
     ...baseCookieOptions,
-    maxAge: 7 * 24 * 60 * 60 * 1000,
+    maxAge: 7 * 24 * 60 * 60,
+    expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
   }
 
   return res
@@ -150,7 +151,8 @@ export const login = asyncHandler(async (req, res) => {
 
   const refreshTokenCookieOptions = {
     ...baseCookieOptions,
-    maxAge: 7 * 24 * 60 * 60 * 1000,
+    maxAge: 7 * 24 * 60 * 60,
+    expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
   }
 
   res
@@ -173,7 +175,8 @@ export const logout = asyncHandler(async (req, res) => {
 
   const refreshTokenCookieOptions = {
     ...baseCookieOptions,
-    maxAge: 7 * 24 * 60 * 60 * 1000,
+    maxAge: 7 * 24 * 60 * 60,
+    expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
   }
 
   return res
@@ -196,7 +199,8 @@ export const refreshAccessToken = asyncHandler(async (req, res) => {
 
   const refreshTokenCookieOptions = {
     ...baseCookieOptions,
-    maxAge: 7 * 24 * 60 * 60 * 1000,
+    maxAge: 7 * 24 * 60 * 60,
+    expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
   };
   const response = {
     accessToken,
@@ -425,7 +429,8 @@ export const googleLogin = asyncHandler(async (req, res) => {
   
   const refreshTokenCookieOptions = {
     ...baseCookieOptions,
-    maxAge: 7 * 24 * 60 * 60 * 1000,
+    maxAge: 7 * 24 * 60 * 60,
+    expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
   }
 
   return res
