@@ -33,9 +33,9 @@ export default function AppLayout() {
         {/* Feed column — scrolls internally, nav always at bottom */}
         <section className="flex flex-col flex-1 min-w-0 border-r border-border overflow-hidden">
 
-          {/* Scrollable content — pb-16 reserves space so content isn't hidden under the fixed nav */}
+          {/* Scrollable content — pb-28 reserves space so content isn't hidden under the fixed nav */}
           <div id="feed-scroll" className="flex-1 overflow-y-auto" style={{ scrollbarGutter: 'stable' }}>
-            <div className={`max-w-2xl mx-auto w-full relative ${showBtmNav ? "pb-16 md:pb-0" : ""}`}>
+            <div className={`max-w-2xl mx-auto w-full relative ${showBtmNav ? "pb-28 md:pb-0" : ""}`}>
               <Outlet />
             </div>
           </div>
@@ -48,10 +48,15 @@ export default function AppLayout() {
 
       </main>
 
-      {/* Bottom nav — fixed to viewport bottom, backdrop-blur works because page content scrolls behind it */}
+      {/* Bottom nav — Floating pill design */}
       {showBtmNav && !mobileSidebarOpen && (
-        <div className="md:hidden fixed bottom-0 left-0 right-0 z-30">
-          <BtmDashboard onOpenSidebar={() => setMobileSidebarOpen(true)} />
+        <div 
+          className="md:hidden fixed z-50 pointer-events-none flex justify-center w-full"
+          style={{ bottom: 'calc(1.25rem + env(safe-area-inset-bottom))' }}
+        >
+          <div className="w-[calc(100%-2rem)] max-w-md pointer-events-auto">
+            <BtmDashboard onOpenSidebar={() => setMobileSidebarOpen(true)} />
+          </div>
         </div>
       )}
     </SidebarProvider>

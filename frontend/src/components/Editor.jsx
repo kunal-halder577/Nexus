@@ -30,10 +30,10 @@ export default function NexusEditor({ content, setContent, maxChars = 500, compa
         editorProps: {
             attributes: {
                 // CHANGED: Replaced `max-w-none` with `max-w-full`, added `break-words`, `whitespace-pre-wrap`, and `overflow-x-hidden`
-                class: cn('w-full outline-none p-2 md:p-4 leading-[1.8]         tracking-wide text-foreground',
+                class: cn('w-full outline-none p-2 md:p-4 leading-[1.8]         tracking-wide text-foreground bg-transparent focus:ring-0 focus:outline-none flex-grow',
                     'prose dark:prose-invert !max-w-full break-words overflow-x-hidden',
                     // ↓ compact mode for modal — normal post creation keeps the big size
-                    compact ? 'text-sm md:text-base' : 'text-xl md:text-2xl font-light',
+                    compact ? 'text-sm md:text-base' : 'text-lg md:text-lg font-normal',
                 ),
             },
         },

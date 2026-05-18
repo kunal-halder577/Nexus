@@ -16,7 +16,7 @@ export default function CreateToolbar({
 
   return (
     <footer
-      className="flex-none w-full max-w-3xl mx-auto px-3 sm:px-6 pb-6 pt-2 relative z-10 bg-background/80 backdrop-blur-md border-t border-border/20"
+      className="flex-none w-full max-w-3xl mx-auto px-3 sm:px-6 pb-6 pt-3 relative z-10 bg-background/80 backdrop-blur-md border-t border-white/10"
       role="toolbar"
       aria-label="Attachment tools"
     >

@@ -1,8 +1,15 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Image as ImageIcon } from 'lucide-react';
-import { toast } from 'sonner'; // <-- 1. Import Sonner
+import { Image as ImageIcon, User, Globe, Lock } from 'lucide-react';
+import { toast } from 'sonner';
 
 import Editor from '@/components/Editor.jsx';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 import { useDraft }        from './useDraft.js';
 import { isAllowed, revokeAll, DRAFT_KEY } from './mediaUtils.js';
@@ -10,11 +17,14 @@ import MediaLightbox       from './components/MediaLightBox.jsx';
 import AttachmentGrid      from './components/AttachmentGrid.jsx';
 import CreateHeader        from './components/CreateHeader.jsx';
 import CreateToolbar       from './components/CreateToolbar.jsx';
-import DraftBanner         from './components/Draftbanner.jsx';
 import { useCreatePostMutation } from '@/features/post/api/postApi.js';
 import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { selectCurrentUser } from '@/features/auth/authSlice.js';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar.jsx';
 
 export default function NexusFullPageCreate() {
+  const user = useSelector(selectCurrentUser);
   const [content,       setContent]       = useState('');
   const [visibility,    setVisibility]    = useState('public');
   const [isDragging,    setIsDragging]    = useState(false);
@@ -22,8 +32,6 @@ export default function NexusFullPageCreate() {
   const [draftBanner,   setDraftBanner]   = useState(null);
   const [lightboxIndex, setLightboxIndex] = useState(null);
   
-  // <-- Removed the 'rejected' state completely
-
   const dropZoneRef       = useRef(null);
   const imageInputRef     = useRef(null);
   const videoInputRef     = useRef(null);
@@ -32,28 +40,40 @@ export default function NexusFullPageCreate() {
 
   const navigate = useNavigate();
   const [createPost, { isLoading }] = useCreatePostMutation();
-  // ── 7-Character Bug Fix: Strip HTML tags to get pure text length ──
   const plainText = content.replace(/<[^>]*>?/gm, '').replace(/&nbsp;/g, ' ').trim();
 
-  // Keep a ref so the unmount cleanup always sees the latest list
   const attachmentsRef = useRef(attachments);
   useEffect(() => { attachmentsRef.current = attachments; }, [attachments]);
   useEffect(() => () => revokeAll(attachmentsRef.current), []);
 
-  const saveState = useDraft(content, visibility);
+  // Scope the draft key to the logged-in user's ID.
+  // This ensures drafts are completely isolated between accounts sharing the same browser.
+  // null when user is unknown — useDraft and the restore effect both guard against this.
+  const draftKey = user?._id ? `${DRAFT_KEY}:${user._id}` : null;
 
-  // ── Restore draft on mount ──────────────────────────────────────
+  // Pass draftKey into useDraft so it saves to the right key.
+  // useDraft should accept this as its third argument and use it instead of the bare DRAFT_KEY.
+  const saveState = useDraft(content, visibility, draftKey);
+
   useEffect(() => {
-    const raw = localStorage.getItem(DRAFT_KEY);
+    // Don't attempt to restore until we know who is logged in.
+    if (!draftKey) return;
+
+    const raw = localStorage.getItem(draftKey);
     if (!raw) return;
     try {
       const draft = JSON.parse(raw);
       if (draft.content?.trim()) {
-        const age = Math.round((Date.now() - draft.savedAt) / 60000);
-        setDraftBanner({ ...draft, age });
+        const ageMins = Math.round((Date.now() - draft.savedAt) / 60000);
+        let ageText = 'just now';
+        if (ageMins > 0 && ageMins < 60) ageText = `${ageMins}m ago`;
+        else if (ageMins >= 60 && ageMins < 1440) ageText = `${Math.floor(ageMins / 60)}h ago`;
+        else if (ageMins >= 1440) ageText = `${Math.floor(ageMins / 1440)}d ago`;
+
+        setDraftBanner({ ...draft, ageText });
       }
     } catch {}
-  }, []);
+  }, [draftKey]);
 
   const restoreDraft = () => {
     setContent(draftBanner.content);
@@ -62,14 +82,12 @@ export default function NexusFullPageCreate() {
   };
   
   const discardDraft = () => {
-    localStorage.removeItem(DRAFT_KEY);
+    localStorage.removeItem(draftKey);
     setDraftBanner(null);
   };
 
-  // ── Keyboard shortcut: ⌘↩ / Ctrl↩ to publish ──────────────────
   useEffect(() => {
     const handler = (e) => {
-      // Use plainText to prevent publishing empty <p></p> blocks
       if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && (plainText || attachments.length > 0) && !isLoading) handlePublish();
     };
     window.addEventListener('keydown', handler);
@@ -92,30 +110,27 @@ export default function NexusFullPageCreate() {
 
         console.log(post);
         
-        // ✅ Clean up only after success
         revokeAll(currentAttachments);
         setAttachments([]);
         setContent('');
-        localStorage.removeItem(DRAFT_KEY);
+        // Use the scoped key so we clear the right user's draft on publish
+        if (draftKey) localStorage.removeItem(draftKey);
 
         toast.success('Post Published!', { description: 'Your post is now live on Nexus.' });
         navigate('/');
     } catch (error) {
-        // ✅ State is untouched — user can retry without losing their work
         toast.error('Post creation failed', {
-        description: error?.data?.message || error.message || 'Something went wrong.',
+          description: error?.data?.message || error.message || 'Something went wrong.',
         });
     }
   };
 
-  // ── File processing ─────────────────────────────────────────────
   const processFiles = useCallback((files) => {
     if (!files.length) return;
     const allowed = files.filter(isAllowed);
     const blocked = files.filter((f) => !isAllowed(f));
 
     if (blocked.length) {
-      // <-- 3. Sonner Error Toast
       const blockedNames = blocked.map(f => f.name).join(', ');
       toast.error("Unsupported file type", {
         description: `${blockedNames} was removed. Only images, GIFs, and videos are allowed.`,
@@ -153,7 +168,6 @@ export default function NexusFullPageCreate() {
     if (idx !== -1) setLightboxIndex(idx);
   };
 
-  // ── Drag & drop ─────────────────────────────────────────────────
   const handleDragOver  = useCallback((e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true); }, []);
   const handleDragLeave = useCallback((e) => { if (!dropZoneRef.current?.contains(e.relatedTarget)) setIsDragging(false); }, []);
   const handleDrop      = useCallback((e) => {
@@ -173,7 +187,7 @@ export default function NexusFullPageCreate() {
       )}
 
       <div
-        className="h-screen w-full bg-background flex flex-col relative overflow-hidden font-sans"
+        className="h-[100dvh] w-full bg-background flex flex-col relative overflow-hidden font-sans"
         ref={dropZoneRef}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -196,29 +210,74 @@ export default function NexusFullPageCreate() {
           </div>
         )}
 
-        <DraftBanner draft={draftBanner} onRestore={restoreDraft} onDiscard={discardDraft} />
-
         <CreateHeader
           saveState={saveState}
-          visibility={visibility}
           isLoading={isLoading}
-          onVisibilityChange={setVisibility}
           onPublish={handlePublish}
-          canPublish={(plainText.length > 0 || attachments.length > 0) && !isLoading} // Allows publish with only media
+          canPublish={(plainText.length > 0 || attachments.length > 0) && !isLoading}
+          draftBanner={draftBanner}
+          onRestoreDraft={restoreDraft}
+          onDiscardDraft={discardDraft}
         />
 
-        <main className="flex-1 w-full max-w-3xl mx-auto px-3 py-4 sm:px-6 sm:py-8 flex flex-col relative z-10 overflow-y-auto" role="main" aria-label="Post editor">
-          <Editor content={content} setContent={setContent} maxChars={500} />
+        {/* Main layout container */}
+        <div
+          className="flex-1 min-h-0 w-full max-w-3xl mx-auto px-3 py-4 sm:px-6 sm:py-8 flex flex-col gap-3 relative z-10 overflow-hidden"
+          role="main"
+          aria-label="Post editor"
+        >
+          {/* Avatar and Visibility Row */}
+          <div className="flex items-center gap-4 shrink-0">
+            <Avatar className="w-10 h-10 ring-2 ring-indigo-500/20 shadow-sm">
+              <AvatarImage src={user?.avatarUrl} alt={user?.name || 'User'} className="object-cover" />
+              <AvatarFallback className="bg-indigo-500/15 text-indigo-500 dark:text-indigo-400 font-semibold text-sm">
+                {user?.name?.charAt(0)?.toUpperCase() || <User className="w-5 h-5" />}
+              </AvatarFallback>
+            </Avatar>
 
-          <AttachmentGrid
-            attachments={attachments}
-            onRemove={removeAttachment}
-            onOpen={openLightbox}
-          />
-        </main>
+            <div className="flex flex-col justify-center gap-1">
+              <span className="text-[15px] font-semibold text-foreground tracking-tight leading-none">
+                {user?.name || 'User'}
+              </span>
+              <Select value={visibility} onValueChange={setVisibility}>
+                <SelectTrigger
+                  aria-label="Post visibility"
+                  className="w-auto h-auto min-h-0 py-0.5 border-none bg-transparent hover:bg-muted/40 focus:ring-1 focus:ring-indigo-500/30 shadow-none transition-colors text-indigo-400 cursor-pointer justify-start gap-1.5 rounded-md px-1.5 -ml-1.5"
+                >
+                  {visibility === 'public' ? (
+                    <Globe className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+                  ) : (
+                    <Lock className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+                  )}
+                  <span className="text-sm font-medium leading-none">
+                    <SelectValue placeholder="Visibility" />
+                  </span>
+                </SelectTrigger>
+                <SelectContent
+                  position="popper"
+                  sideOffset={4}
+                  className="border-border/20 backdrop-blur-xl bg-background/95 rounded-xl shadow-2xl min-w-[150px]"
+                >
+                  <SelectItem value="public"  className="cursor-pointer py-2.5">Public</SelectItem>
+                  <SelectItem value="private" className="cursor-pointer py-2.5">Connections</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Scrollable editor + attachments */}
+          <main className="flex-1 min-w-0 min-h-0 flex flex-col overflow-y-auto overflow-x-hidden pt-1">
+            <Editor content={content} setContent={setContent} maxChars={500} />
+            <AttachmentGrid
+              attachments={attachments}
+              onRemove={removeAttachment}
+              onOpen={openLightbox}
+            />
+          </main>
+        </div>
 
         <CreateToolbar
-          content={plainText} // Pass plain text to Toolbar so it counts correctly
+          content={plainText}
           attachmentCount={attachments.length}
           onPickImage={() => imageInputRef.current?.click()}
           onPickVideo={() => videoInputRef.current?.click()}

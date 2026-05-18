@@ -40,9 +40,10 @@ export default function BtmDashboard({ onOpenSidebar }) {
       ref={navRef}
       className="
         relative flex items-center justify-around
-        h-16 px-1 z-40
-        border-t border-border bg-background/80
-        backdrop-blur-md safe-area-inset-bottom
+        h-16 px-2 z-40
+        bg-background/80 backdrop-blur-xl
+        border border-border/50 rounded-2xl
+        shadow-lg
       "
     >
       {/* Pill — z-index 0, pointer-events none, never blocks buttons */}
