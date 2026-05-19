@@ -73,7 +73,7 @@ export const register = asyncHandler(async (req, res) => {
     secure: nodeEnv === 'production',
     sameSite: 'lax',
     path: '/',
-    domain: nodeEnv === 'production' ? rootDomain : 'localhost',
+    domain: nodeEnv === 'production' ? `.${rootDomain}` : 'localhost',
   };
 
   const refreshTokenCookieOptions = {
@@ -150,7 +150,7 @@ export const login = asyncHandler(async (req, res) => {
     secure: nodeEnv === 'production',
     sameSite: 'lax',
     path: '/',
-    domain: nodeEnv === 'production' ? rootDomain : 'localhost',
+    domain: nodeEnv === 'production' ? `.${rootDomain}` : 'localhost',
   }
 
   const refreshTokenCookieOptions = {
@@ -176,7 +176,7 @@ export const logout = asyncHandler(async (req, res) => {
     secure: nodeEnv === 'production',
     sameSite: 'lax',
     path: '/',
-    domain: nodeEnv === 'production' ? rootDomain : 'localhost',
+    domain: nodeEnv === 'production' ? `.${rootDomain}` : 'localhost',
   }
 
   const refreshTokenCookieOptions = {
@@ -202,7 +202,7 @@ export const refreshAccessToken = asyncHandler(async (req, res) => {
     secure: nodeEnv === 'production',
     sameSite: 'lax',
     path: '/',
-    domain: nodeEnv === 'production' ? rootDomain : 'localhost',
+    domain: nodeEnv === 'production' ? `.${rootDomain}` : 'localhost',
   } 
 
   const refreshTokenCookieOptions = {
@@ -287,7 +287,7 @@ export const getMe = asyncHandler(async (req, res) => {
       secure: nodeEnv === "production",
       sameSite: 'lax',
       path: '/',
-      domain: nodeEnv === 'production' ? rootDomain : 'localhost',
+      domain: nodeEnv === 'production' ? `.${rootDomain}` : 'localhost',
     });
 
     throw new ApiError(401, "Refresh token revoked.");
@@ -436,7 +436,7 @@ export const googleLogin = asyncHandler(async (req, res) => {
     secure: nodeEnv === 'production',
     sameSite: 'lax',
     path: '/',
-    domain: nodeEnv === 'production' ? rootDomain : 'localhost',
+    domain: nodeEnv === 'production' ? `.${rootDomain}` : 'localhost',
   };
   
   const refreshTokenCookieOptions = {
