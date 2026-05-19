@@ -1,7 +1,7 @@
 import bcrypt from "bcrypt";
 import User from '../models/user.model.js';
 import ApiError from '../utils/ApiError.js';
-import { accessTokenExpiry, accessTokenSecretKey, googleClientId, nodeEnv, refreshTokenSecretKey } from '../constants.js';
+import { accessTokenExpiry, accessTokenSecretKey, googleClientId, nodeEnv, refreshTokenSecretKey, rootDomain } from '../constants.js';
 import ApiResponse from '../utils/ApiResponse.js';
 import asyncHandler from '../utils/asyncHandler.js';
 import { OAuth2Client } from "google-auth-library";
@@ -71,12 +71,14 @@ export const register = asyncHandler(async (req, res) => {
   const baseCookieOptions = {
     httpOnly: true,
     secure: nodeEnv === 'production',
-    sameSite: nodeEnv === 'production'? 'none':'lax',
+    sameSite: 'lax',
+    path: '/',
+    domain: nodeEnv === 'production' ? rootDomain : 'localhost',
   };
 
   const refreshTokenCookieOptions = {
     ...baseCookieOptions,
-    maxAge: 7 * 24 * 60 * 60,
+    maxAge: 7 * 24 * 60 * 60 * 1000,
     expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
   }
 
@@ -146,12 +148,14 @@ export const login = asyncHandler(async (req, res) => {
    const baseCookieOptions = {
     httpOnly: true,
     secure: nodeEnv === 'production',
-    sameSite: nodeEnv === 'production'? 'none':'lax',
+    sameSite: 'lax',
+    path: '/',
+    domain: nodeEnv === 'production' ? rootDomain : 'localhost',
   }
 
   const refreshTokenCookieOptions = {
     ...baseCookieOptions,
-    maxAge: 7 * 24 * 60 * 60,
+    maxAge: 7 * 24 * 60 * 60 * 1000,
     expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
   }
 
@@ -170,12 +174,14 @@ export const logout = asyncHandler(async (req, res) => {
    const baseCookieOptions = {
     httpOnly: true,
     secure: nodeEnv === 'production',
-    sameSite: nodeEnv === 'production'? 'none':'lax',
+    sameSite: 'lax',
+    path: '/',
+    domain: nodeEnv === 'production' ? rootDomain : 'localhost',
   }
 
   const refreshTokenCookieOptions = {
     ...baseCookieOptions,
-    maxAge: 7 * 24 * 60 * 60,
+    maxAge: 7 * 24 * 60 * 60 * 1000,
     expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
   }
 
@@ -194,12 +200,14 @@ export const refreshAccessToken = asyncHandler(async (req, res) => {
    const baseCookieOptions = {
     httpOnly: true,
     secure: nodeEnv === 'production',
-    sameSite: nodeEnv === 'production'? 'none':'lax',
+    sameSite: 'lax',
+    path: '/',
+    domain: nodeEnv === 'production' ? rootDomain : 'localhost',
   } 
 
   const refreshTokenCookieOptions = {
     ...baseCookieOptions,
-    maxAge: 7 * 24 * 60 * 60,
+    maxAge: 7 * 24 * 60 * 60 * 1000,
     expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
   };
   const response = {
@@ -277,7 +285,9 @@ export const getMe = asyncHandler(async (req, res) => {
     res.clearCookie("refreshToken", {
       httpOnly: true,
       secure: nodeEnv === "production",
-      sameSite: nodeEnv === 'production'? 'none':'lax',
+      sameSite: 'lax',
+      path: '/',
+      domain: nodeEnv === 'production' ? rootDomain : 'localhost',
     });
 
     throw new ApiError(401, "Refresh token revoked.");
@@ -424,12 +434,14 @@ export const googleLogin = asyncHandler(async (req, res) => {
   const baseCookieOptions = {
     httpOnly: true,
     secure: nodeEnv === 'production',
-    sameSite: nodeEnv === 'production' ? 'none' : 'lax',
+    sameSite: 'lax',
+    path: '/',
+    domain: nodeEnv === 'production' ? rootDomain : 'localhost',
   };
   
   const refreshTokenCookieOptions = {
     ...baseCookieOptions,
-    maxAge: 7 * 24 * 60 * 60,
+    maxAge: 7 * 24 * 60 * 60 * 1000,
     expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
   }
 
