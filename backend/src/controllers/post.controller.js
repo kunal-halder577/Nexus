@@ -6,6 +6,7 @@ import ApiResponse from "../utils/ApiResponse.js";
 import asyncHandler from "../utils/asyncHandler.js"
 import { deleteMultipleMedia, uploadMultipleMedia } from "../utils/cloudinary.js";
 import User from "../models/user.model.js";
+import redis from "../cache/redisConfig.js";
 
 export const createPost = asyncHandler(async (req, res) => {
   const userId = req.user._id;
@@ -178,9 +179,18 @@ export const getPostById = asyncHandler(async (req, res) => {
 
   if(!post?.length) throw new ApiError(404, "Post not found.");
 
+  const currentPost = post[0];
+  try {
+    const count = await redis.pfcount(`uniques:${currentPost._id.toString()}`);
+    const uniqueView = count != null ? Number(count) : 0;
+    currentPost.stats.viewCount = (currentPost.stats.viewCount || 0) + uniqueView;
+  } catch (error) {
+    console.error(`Can't get views from redis for post: ${currentPost._id}`, error);
+  }
+
   return res
   .status(200)
-  .json(new ApiResponse(200, "Post fetched successfully.", post[0]));
+  .json(new ApiResponse(200, "Post fetched successfully.", currentPost));
 });
 export const getPosts = asyncHandler(async (req, res) => {
   const limit = Math.max(1, Math.min(parseInt(req.query.limit) || 10, 50));
@@ -282,6 +292,35 @@ export const getPosts = asyncHandler(async (req, res) => {
     cursorCreatedAt: lastPost.createdAt.toISOString(),
     cursorId: lastPost._id.toString()
   } : null;
+
+  const redisPipeline = redis.pipeline();
+
+  posts.forEach(post => {
+    redisPipeline.pfcount(`uniques:${post._id.toString()}`)
+  });
+
+  let redisPipelineResult = null;
+  try {
+    redisPipelineResult = await redisPipeline.exec();
+  } catch (error) {
+    console.error("Redis pipeline execution failed:", error);
+  }
+
+  if (!redisPipelineResult) {
+    console.error("Redis pipeline returned null — Redis may be down. Skipping view counts.");
+  } else {
+    posts.forEach((post, index) => {
+      const [error, count] = redisPipelineResult[index];
+
+      if (error) {
+        console.error(`Can't get views from redis for post: ${post._id}`, error);
+        return;
+      }
+
+      const uniqueView = count != null ? Number(count) : 0;
+      post.stats.viewCount = (post.stats.viewCount || 0) + uniqueView;
+    });
+  }
 
   const response = {
     data: posts,
@@ -390,6 +429,35 @@ export const getUserPosts = asyncHandler(async (req, res) => {
     cursorId: lastPost._id.toString()
   } : null;
 
+  const redisPipeline = redis.pipeline();
+
+  posts.forEach(post => {
+    redisPipeline.pfcount(`uniques:${post._id.toString()}`)
+  });
+
+  let redisPipelineResult = null;
+  try {
+    redisPipelineResult = await redisPipeline.exec();
+  } catch (error) {
+    console.error("Redis pipeline execution failed:", error);
+  }
+
+  if (!redisPipelineResult) {
+    console.error("Redis pipeline returned null — Redis may be down. Skipping view counts.");
+  } else {
+    posts.forEach((post, index) => {
+      const [error, count] = redisPipelineResult[index];
+
+      if (error) {
+        console.error(`Can't get views from redis for post: ${post._id}`, error);
+        return;
+      }
+
+      const uniqueView = count != null ? Number(count) : 0;
+      post.stats.viewCount = (post.stats.viewCount || 0) + uniqueView;
+    });
+  }
+
   const response = {
     data: posts,
     nextCursor,
@@ -468,4 +536,22 @@ export const deletePost = asyncHandler(async (req, res) => {
   return res
     .status(200)
     .json(new ApiResponse(200, "Post deleted successfully.", {}));
+});
+export const viewPost = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const userId = req.user._id;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    throw new ApiError(400, "Invalid post id.");
+  }
+
+  try {
+    await redis.pfadd(`uniques:${id}`, userId.toString());
+  } catch (err) {
+    console.error(`Failed to log view in Redis for post ${id}:`, err.message);
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, 'View updated successfully.', { success: true }));
 });
