@@ -17,11 +17,17 @@ services:
       - ./backend/.env
     depends_on:
       - mongodb
+      - redis
   mongodb:
     image: mongo
     volumes:
       - mongo-data:/data/db
     env_file:
       - ./backend/.env
+  redis:
+    image: redis
+    volumes:
+      - redis-data:/data
 volumes:
   mongo-data:
+  redis-data:
