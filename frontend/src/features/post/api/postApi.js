@@ -133,6 +133,10 @@ export const postApi = baseApi.injectEndpoints({
       },
     }),
 
+    viewPost: builder.mutation({
+      query: (id) => ({ url: `/posts/${id}/view`, method: "POST" }),
+    }),
+
     // ✅ userId no longer needed from caller
     deletePost: builder.mutation({
       query: ({ id }) => ({ url: `/posts/${id}`, method: "DELETE" }),
@@ -170,4 +174,5 @@ export const {
   useUpdatePostMutation,
   useGetFeedPostsInfiniteQuery,
   useGetUserPostsInfiniteQuery,
+  useViewPostMutation,
 } = postApi;
