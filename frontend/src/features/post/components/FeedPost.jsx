@@ -15,6 +15,7 @@ import { toast } from 'sonner';
 import PostActionMenu from './PostActionMenu.jsx';
 import { useEditPost } from '@/hooks/useEditPost.js';
 import EditPostModal from '@/components/Shared/EditPostModal.jsx';
+import PostViewTracker from './PostViewTracker.jsx';
 import {
   useFollowUserMutation,
   useUnfollowUserMutation,
@@ -359,9 +360,10 @@ const FeedPost = ({ post }) => {
 
   return (
     <>
-      <Card
-        onClick={openPost}
-        onKeyDown={(e) => {
+      <PostViewTracker postId={post._id}>
+        <Card
+          onClick={openPost}
+          onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
             openPost();
@@ -478,6 +480,7 @@ const FeedPost = ({ post }) => {
           </div>
         </div>
       </Card>
+      </PostViewTracker>
 
       {lightboxIndex !== null && libItems.length > 0 && (
         <MediaLightbox

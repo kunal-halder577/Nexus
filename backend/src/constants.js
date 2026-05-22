@@ -11,3 +11,4 @@ export const allowedOrigins = ["http://localhost:5173", "http://frontend:5173", 
 export const googleClientId = process.env.GOOGLE_CLIENT_ID;
 export const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
 export const rootDomain = process.env.ROOT_DOMAIN;
+export const redisUrl = process.env.REDIS_URL;
