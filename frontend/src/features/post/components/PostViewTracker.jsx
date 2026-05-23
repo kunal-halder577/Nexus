@@ -1,10 +1,14 @@
 import React, { useEffect, useRef } from 'react';
+import { useSelector } from 'react-redux';
+import { selectCurrentUser } from '../../auth/authSlice';
 import { markPostAsViewedLocally } from '../utils/viewTracker';
 import { useViewPostMutation } from '../api/postApi';
 
 const PostViewTracker = ({ postId, children }) => {
   const containerRef = useRef(null);
   const [viewPost] = useViewPostMutation();
+  const currentUser = useSelector(selectCurrentUser);
+  const userId = currentUser?._id;
 
   useEffect(() => {
     // Safety check for SSR or older browsers
@@ -19,7 +23,7 @@ const PostViewTracker = ({ postId, children }) => {
             // Post is at least 50% visible, start the 1 second timer
             viewTimeout = setTimeout(() => {
               // 1. Check local storage utility
-              const alreadyViewed = markPostAsViewedLocally(postId);
+              const alreadyViewed = markPostAsViewedLocally(postId, userId);
 
               if (alreadyViewed) {
                 // Instantly disconnect if already viewed to save memory
@@ -59,7 +63,7 @@ const PostViewTracker = ({ postId, children }) => {
       if (viewTimeout) clearTimeout(viewTimeout);
       observer.disconnect();
     };
-  }, [postId, viewPost]);
+  }, [postId, viewPost, userId]);
 
   // Wrapper div maintains layout neutrality but captures ref
   return (
