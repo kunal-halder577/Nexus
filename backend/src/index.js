@@ -3,6 +3,7 @@ import dotenv from "dotenv/config";
 import app from './app.js';
 import { connectDB } from './database/config.js';
 import { startCronJob } from "./jobs/cleanUpLikes.js";
+import startCronJobForView from "./jobs/syncViews.js";
 import redis from "./cache/redisConfig.js";
 
 connectDB()
@@ -10,6 +11,7 @@ connectDB()
     await redis.ping();
     
     startCronJob();
+    startCronJobForView();
         
     app.listen(3000, () => {
       console.log(`Server is listening at ${3000}`);
