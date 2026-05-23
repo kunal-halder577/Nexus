@@ -4,9 +4,12 @@ const VIEWED_POSTS_KEY = 'viewed_posts';
  * Utility to track viewed posts in localStorage to prevent duplicate API calls
  * during the same session.
  */
-export const markPostAsViewedLocally = (postId) => {
+export const markPostAsViewedLocally = (postId, userId) => {
+  if (!userId) return false;
+  const key = `${VIEWED_POSTS_KEY}_${userId}`;
+  
   try {
-    const viewedPostsJson = localStorage.getItem(VIEWED_POSTS_KEY);
+    const viewedPostsJson = localStorage.getItem(key);
     const viewedPosts = viewedPostsJson ? JSON.parse(viewedPostsJson) : [];
 
     // Check if we've already tracked this post in the current browser session/storage
@@ -16,7 +19,7 @@ export const markPostAsViewedLocally = (postId) => {
 
     // New view, append and update storage
     viewedPosts.push(postId);
-    localStorage.setItem(VIEWED_POSTS_KEY, JSON.stringify(viewedPosts));
+    localStorage.setItem(key, JSON.stringify(viewedPosts));
     
     return false; // Not viewed before, newly marked
   } catch (error) {

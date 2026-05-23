@@ -183,7 +183,7 @@ export const getPostById = asyncHandler(async (req, res) => {
   try {
     const count = await redis.pfcount(`uniques:${currentPost._id.toString()}`);
     const uniqueView = count != null ? Number(count) : 0;
-    currentPost.stats.viewCount = (currentPost.stats.viewCount || 0) + uniqueView;
+    currentPost.stats.viewCount = Math.max((currentPost.stats.viewCount || 0), uniqueView);
   } catch (error) {
     console.error(`Can't get views from redis for post: ${currentPost._id}`, error);
   }
@@ -318,7 +318,7 @@ export const getPosts = asyncHandler(async (req, res) => {
       }
 
       const uniqueView = count != null ? Number(count) : 0;
-      post.stats.viewCount = (post.stats.viewCount || 0) + uniqueView;
+      post.stats.viewCount = Math.max((post.stats.viewCount || 0), uniqueView);
     });
   }
 
@@ -454,7 +454,7 @@ export const getUserPosts = asyncHandler(async (req, res) => {
       }
 
       const uniqueView = count != null ? Number(count) : 0;
-      post.stats.viewCount = (post.stats.viewCount || 0) + uniqueView;
+      post.stats.viewCount = Math.max((post.stats.viewCount || 0), uniqueView);
     });
   }
 
@@ -546,7 +546,10 @@ export const viewPost = asyncHandler(async (req, res) => {
   }
 
   try {
-    await redis.pfadd(`uniques:${id}`, userId.toString());
+    const pipeline = redis.pipeline();
+    pipeline.pfadd(`uniques:${id}`, userId.toString());
+    pipeline.sadd('pending_view_sync', id);
+    await pipeline.exec();
   } catch (err) {
     console.error(`Failed to log view in Redis for post ${id}:`, err.message);
   }

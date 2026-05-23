@@ -1,5 +1,5 @@
 import cron from 'node-cron';
-import { Post } from '../models/post.model.js';
+import Post from '../models/post.model.js';
 import redis from '../cache/redisConfig.js';
 
 let isSyncing = false;
@@ -42,7 +42,7 @@ const syncViewsToDatabase = async () => {
       return {
         updateOne: {
           filter: { _id: id },
-          update: { $set: { 'stats.viewCount': uniqueViews } }
+          update: { $max: { 'stats.viewCount': uniqueViews } }
         }
       };
     });
@@ -60,7 +60,13 @@ const syncViewsToDatabase = async () => {
 };
 
 const startCronJobForView = () => {
-  cron.schedule('*/15 * * * *', syncViewsToDatabase);
+  cron.schedule('*/15 * * * *', async () => {
+    try {
+      await syncViewsToDatabase()
+    } catch (error) {
+      console.error("Error in syncViewsToDatabase", error);
+    }
+  });
   console.log('✅ Cron job for view sync started.');
 };
 
