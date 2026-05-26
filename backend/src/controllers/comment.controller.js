@@ -3,6 +3,7 @@ import asyncHandler from "../utils/asyncHandler.js";
 import IdempotentRecord from "../models/IdempodentRecord.model.js";
 import Comment from "../models/Comment.model.js";
 import Post from "../models/post.model.js";
+import Like from "../models/like.model.js";
 import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
 
@@ -87,6 +88,8 @@ export const createComment = asyncHandler(async (req, res) => {
             parentId,
         });
         
+        await createdComment.populate('author', 'username avatarUrl name');
+
         post.stats.commentCount += 1;
         await post.save();
         
@@ -149,7 +152,7 @@ export const updateComment = asyncHandler(async (req, res) => {
     }
 
     const comment = await Comment.findById(commentId)
-    .select('author content deletedAt');
+    .select('author content deletedAt postId parentId');
 
     if(!comment || comment.deletedAt) throw new ApiError(404, 'Comment not found.');
     if(!comment.author.equals(userId)) throw new ApiError(403, 'Unauthorized request.');
@@ -185,7 +188,10 @@ export const deleteComment = asyncHandler(async (req, res) => {
 
     return res
     .status(200)
-    .json(new ApiResponse(200, 'Comment deleted successfully.', {}));
+    .json(new ApiResponse(200, 'Comment deleted successfully.', {
+        postId: comment.postId,
+        parentId: comment.parentId
+    }));
 });
 export const getPostComments = asyncHandler(async (req, res) => {
     const { postId } = req.params;
@@ -199,15 +205,52 @@ export const getPostComments = asyncHandler(async (req, res) => {
     const post = await Post.findById(postId);
     if(!post) throw new ApiError(404, "Post not found");
 
-    const comments = await Comment.find({ postId, parentId: null, deletedAt: null })
-        .populate('author', 'username avatarUrl name')
-        .sort({ createdAt: -1})
-        .skip(skip)
-        .limit(limit);
+    const filter = { 
+        postId, 
+        parentId: null,
+        $or: [
+            { deletedAt: null },
+            { 'stats.replyCount': { $gt: 0 } }
+        ]
+    };
+
+    const [comments, total] = await Promise.all([
+        Comment.find(filter)
+            .populate('author', 'username avatarUrl name')
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(Number(limit)),
+        Comment.countDocuments(filter)
+    ]);
+
+    const commentIds = comments.map(c => c._id);
+    const userLikes = await Like.find({
+        user: req.user._id,
+        likableId: { $in: commentIds },
+        likableType: 'Comment'
+    }).select('likableId');
+
+    const likedCommentIds = new Set(userLikes.map(l => l.likableId.toString()));
+
+    const commentsWithLikes = comments.map(c => {
+        const obj = c.toObject();
+        obj.isLiked = likedCommentIds.has(obj._id.toString());
+        obj.isEdited = c.updatedAt.getTime() !== c.createdAt.getTime();
+        return obj;
+    });
 
     return res
     .status(200)
-    .json(new ApiResponse(200, "Comments fetched successfully.", comments));
+    .json(new ApiResponse(200, "Comments fetched successfully.", {
+        comments: commentsWithLikes,
+        pagination: {
+            total,
+            page: Number(page),
+            limit: Number(limit),
+            totalPages: Math.ceil(total / limit),
+            hasNextPage: page * limit < total,
+        }
+    }));
 });
 export const getReplies = asyncHandler(async (req, res) => {
     const { commentId } = req.params;
@@ -219,15 +262,51 @@ export const getReplies = asyncHandler(async (req, res) => {
     }
 
     const comment = await Comment.findById(commentId);
-    if(!comment || comment.deletedAt) throw new ApiError(404, "Comment not found");
+    if(!comment) throw new ApiError(404, "Comment not found");
 
-    const replies = await Comment.find({ parentId: commentId, deletedAt: null })
-        .populate('author', 'username avatarUrl name')
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit);
+    const filter = { 
+        parentId: commentId,
+        $or: [
+            { deletedAt: null },
+            { 'stats.replyCount': { $gt: 0 } }
+        ]
+    };
+
+    const [replies, total] = await Promise.all([
+        Comment.find(filter)
+            .populate('author', 'username avatarUrl name')
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(Number(limit)),
+        Comment.countDocuments(filter)
+    ]);
+
+    const replyIds = replies.map(r => r._id);
+    const userLikes = await Like.find({
+        user: req.user._id,
+        likableId: { $in: replyIds },
+        likableType: 'Comment'
+    }).select('likableId');
+
+    const likedReplyIds = new Set(userLikes.map(l => l.likableId.toString()));
+
+    const repliesWithLikes = replies.map(r => {
+        const obj = r.toObject();
+        obj.isLiked = likedReplyIds.has(obj._id.toString());
+        obj.isEdited = r.updatedAt.getTime() !== r.createdAt.getTime();
+        return obj;
+    });
 
     return res
     .status(200)
-    .json(new ApiResponse(200, "Replies fetched successfully.", replies));
+    .json(new ApiResponse(200, "Replies fetched successfully.", {
+        replies: repliesWithLikes,
+        pagination: {
+            total,
+            page: Number(page),
+            limit: Number(limit),
+            totalPages: Math.ceil(total / limit),
+            hasNextPage: page * limit < total,
+        }
+    }));
 });
