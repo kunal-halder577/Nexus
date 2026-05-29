@@ -45,7 +45,8 @@ export const toggleLike = asyncHandler(async (req, res) => {
 
         try {
             await targetModel.findByIdAndUpdate(likableId,
-                { $inc: { 'stats.likeCount': -1 } }
+                { $inc: { 'stats.likeCount': -1 } },
+                { timestamps: false }   // don't touch updatedAt — isEdited relies on it
             );
         } catch (error) {
             console.error(`[toggleLike] Failed to decrement likeCount for ${likableType} ${likableId}:`, error);
@@ -71,7 +72,8 @@ export const toggleLike = asyncHandler(async (req, res) => {
 
     try {
         await targetModel.findByIdAndUpdate(likableId,
-            { $inc: { 'stats.likeCount': 1 } }
+            { $inc: { 'stats.likeCount': 1 } },
+            { timestamps: false }   // don't touch updatedAt — isEdited relies on it
         );
     } catch (error) {
         console.error(`[toggleLike] Failed to increment likeCount for ${likableType} ${likableId}:`, error);
