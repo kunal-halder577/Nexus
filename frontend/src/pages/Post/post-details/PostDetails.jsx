@@ -27,16 +27,16 @@ const PostDetailPage = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* ── STICKY TOP BAR ── */}
-      <header className="sticky top-0 z-20 flex items-center gap-4 px-4 py-3
+      <header className="sticky top-0 z-20 flex items-center gap-3 px-3 h-14
         bg-background/80 backdrop-blur-md border-b border-border/40">
         <Button
           variant="ghost"
           size="icon"
           type="button"
           onClick={() => navigate(-1)}
-          className="rounded-full h-9 w-9 text-muted-foreground hover:text-foreground hover:bg-muted/50 cursor-pointer"
+          className="rounded-full h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted/50 cursor-pointer"
         >
-          <ArrowLeft className="w-5 h-5" aria-hidden="true" />
+          <ArrowLeft className="w-4 h-4" aria-hidden="true" />
           <span className="sr-only">Go back</span>
         </Button>
         <h1 className="text-base font-semibold text-foreground tracking-tight">Post</h1>

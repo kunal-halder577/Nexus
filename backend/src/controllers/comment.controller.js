@@ -94,8 +94,11 @@ export const createComment = asyncHandler(async (req, res) => {
         await post.save();
         
         if(parentComment) {
-            parentComment.stats.replyCount += 1;
-            await parentComment.save();
+            await Comment.updateOne(
+                { _id: parentComment._id },
+                { $inc: { 'stats.replyCount': 1 } },
+                { timestamps: false }  // stat-only update — don't touch updatedAt
+            );
         } 
 
         await IdempotentRecord.updateOne(
@@ -172,7 +175,7 @@ export const deleteComment = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Comment id is required.");
     }
     
-    const comment = await Comment.findById(commentId).select('author deletedAt content postId parentId');
+    const comment = await Comment.findById(commentId).select('author deletedAt content postId parentId stats');
     if(!comment || comment.deletedAt) throw new ApiError(404, 'Comment not found.');
     if(!comment.author.equals(userId)) throw new ApiError(403, 'Unauthorized request.');
 
@@ -182,8 +185,16 @@ export const deleteComment = asyncHandler(async (req, res) => {
 
     await Post.updateOne({ _id: comment.postId }, { $inc: { 'stats.commentCount': -1 } });
 
-    if (comment.parentId) {
-        await Comment.updateOne({ _id: comment.parentId }, { $inc: { 'stats.replyCount': -1 } });
+    // Only decrement parent's replyCount if this comment has no replies of its own.
+    // If it DOES have replies, it becomes a tombstone and still occupies its parent's
+    // reply slot — decrementing would cause the grandparent to disappear from queries
+    // that filter on $or: [deletedAt: null, replyCount > 0].
+    if (comment.parentId && (comment.stats?.replyCount ?? 0) === 0) {
+        await Comment.updateOne(
+            { _id: comment.parentId },
+            { $inc: { 'stats.replyCount': -1 } },
+            { timestamps: false }  // stat-only update — don't touch updatedAt
+        );
     }
 
     return res
