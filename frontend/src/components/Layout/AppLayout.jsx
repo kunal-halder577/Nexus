@@ -6,13 +6,13 @@ import MobileSidebar from "./MobileSidebar.jsx";
 import RightSidebar from "./Discovery.jsx";
 import BtmDashboard from "./BtmDashboard.jsx";
 
-const HIDE_BTM_NAV_ON = ["/post/create"];
-
 export default function AppLayout() {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const location = useLocation();
 
-  const showBtmNav = !HIDE_BTM_NAV_ON.includes(location.pathname);
+  // Hide the bottom navigation bar on all post-related pages 
+  // (e.g., /post/create, /post/:id) for a more immersive experience.
+  const showBtmNav = !location.pathname.startsWith("/post/");
 
   return (
     <SidebarProvider>

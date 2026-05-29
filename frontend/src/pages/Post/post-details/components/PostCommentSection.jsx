@@ -29,9 +29,9 @@ const formatTime = (dateString) => {
   const hours = Math.floor(diff / 3600000);
   const days  = Math.floor(diff / 86400000);
   if (mins  < 1)  return 'just now';
-  if (mins  < 60) return `${mins}m ago`;
-  if (hours < 24) return `${hours}h ago`;
-  if (days  < 7)  return `${days}d ago`;
+  if (mins  < 60) return `${mins}m`;
+  if (hours < 24) return `${hours}h`;
+  if (days  < 7)  return `${days}d`;
   return new Date(dateString).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 };
 
@@ -196,9 +196,9 @@ const CommentActions = ({
   if (comment.deletedAt) return null;
 
   return (
-    <div className="flex items-center gap-4 mt-2 px-1">
+    <div className="flex items-center gap-3 mt-1.5 px-1 flex-wrap">
       {/* Timestamp */}
-      <span className={`${timestampClass} text-muted-foreground/70 font-medium tabular-nums flex items-center gap-1`}>
+      <span className={`${timestampClass} text-muted-foreground/70 font-medium tabular-nums flex items-center whitespace-nowrap`}>
         {formatTime(comment.createdAt)}
       </span>
 
@@ -210,8 +210,7 @@ const CommentActions = ({
         <button
           type="button"
           onClick={onReply}
-          className={`${textClass} font-semibold text-muted-foreground/70
-            hover:text-indigo-400 transition-colors`}
+          className={`${textClass} font-semibold text-muted-foreground/70 hover:text-indigo-400 transition-colors whitespace-nowrap`}
         >
           Reply
         </button>
@@ -222,7 +221,7 @@ const CommentActions = ({
         <button
           type="button"
           onClick={onEdit}
-          className={`${textClass} font-semibold text-muted-foreground/70 hover:text-indigo-400 transition-colors flex items-center gap-1`}
+          className={`${textClass} font-semibold text-muted-foreground/70 hover:text-indigo-400 transition-colors flex items-center gap-1 whitespace-nowrap`}
         >
           <Pencil className="w-3 h-3" />
           Edit
@@ -234,8 +233,7 @@ const CommentActions = ({
         <button
           type="button"
           onClick={onDelete}
-          className={`${textClass} text-muted-foreground/50 hover:text-red-400
-            transition-colors flex items-center gap-1`}
+          className={`${textClass} text-muted-foreground/50 hover:text-red-400 transition-colors flex items-center gap-1 whitespace-nowrap`}
         >
           <Trash2 className="w-3 h-3" />
           Delete
