@@ -251,6 +251,8 @@ const CommentBubble = ({ comment, postId, depth = 0, avatarSize = 'md' }) => {
   const currentUser              = useSelector(selectCurrentUser);
   const [showReplyInput, setShowReplyInput] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  // Ref to imperatively open NestedReplies when user posts a reply
+  const openRepliesRef = useRef(null);
   const [deleteComment]          = useDeleteCommentMutation();
   const [createComment, { isLoading: isReplying }] = useCreateCommentMutation();
   const [updateComment, { isLoading: isUpdating }] = useUpdateCommentMutation();
@@ -259,8 +261,15 @@ const CommentBubble = ({ comment, postId, depth = 0, avatarSize = 'md' }) => {
   const canReply  = depth < 2;  // max depth is 2
 
   const handleDelete = useCallback(async () => {
-    try { await deleteComment(comment._id).unwrap(); } catch {}
-  }, [comment._id, deleteComment]);
+    try {
+      await deleteComment({
+        id: comment._id,
+        postId,
+        parentId: comment.parentId ?? null,
+        replyCount: comment.stats?.replyCount ?? 0,
+      }).unwrap();
+    } catch {}
+  }, [comment._id, comment.parentId, comment.stats?.replyCount, postId, deleteComment]);
 
   const handleEdit = useCallback(async (text) => {
     try {
@@ -278,6 +287,8 @@ const CommentBubble = ({ comment, postId, depth = 0, avatarSize = 'md' }) => {
         idempotentKey: `reply-${comment._id}-${Date.now()}`,
       }).unwrap();
       setShowReplyInput(false);
+      // Auto-open the replies section so the new reply is immediately visible
+      openRepliesRef.current?.();
     } catch {}
   }, [comment._id, postId, createComment]);
 
@@ -285,8 +296,10 @@ const CommentBubble = ({ comment, postId, depth = 0, avatarSize = 'md' }) => {
     ? 'w-7 h-7'
     : 'w-9 h-9';
 
+  const isPending = !!comment.isPending;
+
   return (
-    <div className="flex flex-col gap-0.5">
+    <div className={`flex flex-col gap-0.5 transition-opacity duration-200 ${isPending ? 'opacity-50' : 'opacity-100'}`}>
       {/* Bubble row */}
       <div className="flex gap-3 group">
         <Avatar className={`${avClass} shrink-0 border border-border/50 mt-0.5 shadow-sm`}>
@@ -330,9 +343,22 @@ const CommentBubble = ({ comment, postId, depth = 0, avatarSize = 'md' }) => {
           ) : (
             <>
               <div
-                className={`bg-card shadow-sm rounded-2xl rounded-tl-sm px-4 py-3
-                  border border-border/50 group-hover:border-indigo-500/30 transition-colors ${comment.deletedAt ? 'bg-muted/30 border-dashed opacity-70' : ''}`}
+                className={`relative bg-card shadow-sm rounded-2xl rounded-tl-sm px-4 py-3
+                  border transition-colors
+                  ${
+                    isPending
+                      ? 'border-indigo-500/30 animate-pulse'
+                      : comment.deletedAt
+                        ? 'bg-muted/30 border-dashed border-border/50 opacity-70'
+                        : 'border-border/50 group-hover:border-indigo-500/30'
+                  }`}
               >
+                {/* Pending spinner in corner */}
+                {isPending && (
+                  <div className="absolute top-2 right-3">
+                    <Loader2 className="w-3 h-3 text-indigo-400 animate-spin" />
+                  </div>
+                )}
                 <div className="flex items-baseline gap-2 mb-1 flex-wrap">
                   <span className="text-sm md:text-base font-semibold text-foreground leading-tight">
                     {comment.deletedAt ? '[deleted]' : comment.author?.name}
@@ -340,8 +366,11 @@ const CommentBubble = ({ comment, postId, depth = 0, avatarSize = 'md' }) => {
                   <span className="text-xs md:text-sm text-muted-foreground/60">
                     {comment.deletedAt ? '[deleted]' : `@${comment.author?.username}`}
                   </span>
-                  {comment.isEdited && !comment.deletedAt && (
+                  {comment.isEdited && !comment.deletedAt && !isPending && (
                     <span className="text-[11px] md:text-xs text-muted-foreground/80 ml-1">(edited)</span>
+                  )}
+                  {isPending && (
+                    <span className="text-[11px] md:text-xs text-indigo-400/80 ml-1">Sending…</span>
                   )}
                 </div>
                 {comment.deletedAt ? (
@@ -351,14 +380,17 @@ const CommentBubble = ({ comment, postId, depth = 0, avatarSize = 'md' }) => {
                 )}
               </div>
 
-              <CommentActions
-                comment={comment}
-                onReply={() => setShowReplyInput((v) => !v)}
-                onEdit={() => setIsEditing(true)}
-                onDelete={handleDelete}
-                isOwn={isOwn}
-                canReply={canReply}
-              />
+              {/* Hide action row while pending */}
+              {!isPending && (
+                <CommentActions
+                  comment={comment}
+                  onReply={() => setShowReplyInput((v) => !v)}
+                  onEdit={() => setIsEditing(true)}
+                  onDelete={handleDelete}
+                  isOwn={isOwn}
+                  canReply={canReply}
+                />
+              )}
             </>
           )}
         </div>
@@ -394,6 +426,7 @@ const CommentBubble = ({ comment, postId, depth = 0, avatarSize = 'md' }) => {
           postId={postId}
           replyCount={comment.stats?.replyCount ?? 0}
           depth={depth}
+          openRef={openRepliesRef}
         />
       )}
     </div>
@@ -401,8 +434,14 @@ const CommentBubble = ({ comment, postId, depth = 0, avatarSize = 'md' }) => {
 };
 
 // ─── Nested reply list for a given parent comment ─────────────────────────────
-const NestedReplies = ({ commentId, postId, replyCount, depth }) => {
+const NestedReplies = ({ commentId, postId, replyCount, depth, openRef }) => {
   const [open, setOpen] = useState(false);
+
+  // Expose an imperative open() so the parent CommentBubble can force-open
+  // after submitting a reply, making the new reply immediately visible.
+  React.useEffect(() => {
+    if (openRef) openRef.current = () => setOpen(true);
+  }, [openRef]);
   const [page, setPage] = useState(1);
 
   const { data, isFetching } = useGetRepliesQuery(
@@ -413,8 +452,8 @@ const NestedReplies = ({ commentId, postId, replyCount, depth }) => {
   const replies    = data?.data?.replies ?? [];
   const pagination = data?.data?.pagination;
 
-  // Nothing to show and no open toggle
-  if (replyCount === 0 && !open) return null;
+  // Nothing to show and not open — but keep mounted if open so optimistic replies stay visible
+  if (replyCount === 0 && !open && replies.length === 0) return null;
 
   const indent = depth === 0 ? 'ml-11' : 'ml-9';
 
@@ -516,7 +555,10 @@ const PostCommentSection = ({ postId, commentCount }) => {
     } catch {}
   }, [createComment, postId]);
 
-  const displayCount = pagination?.total ?? commentCount ?? 0;
+  // Use the authoritative post-level commentCount (excludes soft-deleted tombstones).
+  // pagination.total counts visible root comments including tombstones with replies,
+  // so it would overcount when deleted comments with replies exist.
+  const displayCount = commentCount ?? pagination?.total ?? 0;
 
   return (
     <div className="flex flex-col gap-4">
