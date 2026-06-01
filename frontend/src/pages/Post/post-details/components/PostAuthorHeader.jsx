@@ -16,6 +16,7 @@ import {
   useUnfollowUserMutation,
   useGetFollowStatusQuery,
 } from '@/features/follow/api/followApi';
+import { useCreateBookmarkMutation, useDeleteBookmarkMutation } from '@/features/bookmark/api/bookmarkApi.js';
 
 const formatRelativeTime = (dateString) => {
   if (!dateString) return null;
@@ -85,7 +86,24 @@ const PostAuthorHeader = ({ post, onDeleteSuccess }) => {
   }, [post._id]);
   const handleShare  = useCallback(() => { /* TODO: share sheet */ }, []);
   const handleReport = useCallback(() => { /* TODO: report flow */ }, []);
-  const handleSave   = useCallback(() => { /* TODO: save post  */ }, []);
+  const [createBookmark] = useCreateBookmarkMutation();
+  const [deleteBookmark] = useDeleteBookmarkMutation();
+
+  const handleBookmark = useCallback(async () => {
+    try {
+      const postId = post?._id;
+      if (!postId) return;
+      if(post?.isBookmarked) {
+        await deleteBookmark(postId).unwrap();
+        toast.success("Post is removed from bookmarks.");
+      } else {
+        await createBookmark(postId).unwrap();
+        toast.success("Post added to bookmarks.");
+      }
+    } catch (error) {
+      toast.error(error?.data?.message ?? "Something went wrong.");
+    }
+  }, [post, createBookmark, deleteBookmark]);
 
   const menuActions = useMemo(() => [
     { label: 'Edit post',         onClick: handleEdit,   hidden: !isOwnPost },
@@ -94,9 +112,11 @@ const PostAuthorHeader = ({ post, onDeleteSuccess }) => {
     { label: 'Block user',    onClick: () => {},     variant: 'warning',     hidden: isOwnPost  },
     { type:  'separator',                                hidden: !isOwnPost },
     { label: 'Turn off comments', onClick: () => {},     hidden: !isOwnPost },
-    { label: 'Bookmark',          onClick: () => {},     hidden: !isOwnPost },
-    { label: 'Save post',         onClick: handleSave,   hidden: isOwnPost  },
-    { label: 'Bookmark',          onClick: () => {},     hidden: isOwnPost  },
+    { 
+      label: post?.isBookmarked ? 'Remove from bookmarks' : 'Bookmark',
+      onClick: handleBookmark,
+      variant: post?.isBookmarked ? 'destructive' : 'primary'
+    },
     { type:  'separator' },
     { label: 'Hide post',         onClick: () => {},     hidden: isOwnPost  },
     { 
@@ -108,7 +128,7 @@ const PostAuthorHeader = ({ post, onDeleteSuccess }) => {
     { label: 'Copy link',         onClick: handleCopy  },
     { label: 'Share post',        onClick: handleShare },
     { type:  'separator',                                hidden: isOwnPost  },
-  ], [isOwnPost, handleEdit, handleDelete, handleSave, handleCopy, handleShare, handleReport, isFollowing, handleFollowToggle]);
+  ], [isOwnPost, handleEdit, handleDelete, handleCopy, handleShare, handleReport, isFollowing, handleFollowToggle, post?.isBookmarked, handleBookmark]);
 
   return (
     <>
