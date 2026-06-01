@@ -22,6 +22,7 @@ import {
   useGetFollowStatusQuery,
 } from '@/features/follow/api/followApi.js';
 import { useDislikePostMutation, useLikePostMutation } from '@/features/Like/api/likeApi.js';
+import { useCreateBookmarkMutation, useDeleteBookmarkMutation } from '@/features/bookmark/api/bookmarkApi.js';
 
 // ─── MIME type helper ─────────────────────────────────────────────────────────
 const EXTENSION_TO_MIME = {
@@ -243,6 +244,8 @@ const FeedPost = ({ post }) => {
   const navigate    = useNavigate();
   const currentUser = useSelector(selectCurrentUser);
   const [deletePost] = useDeletePostMutation();
+  const [createBookmark] = useCreateBookmarkMutation();
+  const [deleteBookmark] = useDeleteBookmarkMutation();
   const [lightboxIndex, setLightboxIndex] = useState(null);
 
   const {
@@ -303,6 +306,22 @@ const FeedPost = ({ post }) => {
     }
   }, [dislikePost, post._id]);
 
+  const handleBookmark = useCallback(async () => {
+    try {
+      const postId = post?._id;
+      if (!postId) return;
+      if(post?.isBookmarked) {
+        await deleteBookmark(postId).unwrap();
+        toast.success("Post is removed from bookmarks.");
+      } else {
+        await createBookmark(postId).unwrap();
+        toast.success("Post added to bookmarks.");
+      }
+    } catch (error) {
+      toast.error(error?.data?.message ?? "Something went wrong.");
+    }
+  }, [post, createBookmark, deleteBookmark]);
+
   // ✅ Memoized so StatBtn doesn't re-render on every cycle
   const handleLikeToggler = useCallback(
     (...args) => (post.isLiked ? handleDislike : handleLike)(...args),
@@ -327,7 +346,6 @@ const FeedPost = ({ post }) => {
   }, [post._id]);
   const handleShare  = useCallback(() => { /* TODO */ }, []);
   const handleReport = useCallback(() => { /* TODO */ }, []);
-  const handleSave   = useCallback(() => { /* TODO */ }, []);
 
   const openPost     = useCallback(() => navigate(`/post/${post._id}`), [navigate, post._id]);
   const openLightbox = useCallback((idx) => setLightboxIndex(idx), []);
@@ -342,9 +360,11 @@ const FeedPost = ({ post }) => {
     { label: "Block user",        onClick: () => {},     variant: "warning",     hidden: isOwnPost  },
     { type:  "separator",                                hidden: !isOwnPost },
     { label: "Turn off comments", onClick: () => {},     hidden: !isOwnPost },
-    { label: "Bookmark",          onClick: () => {},     hidden: !isOwnPost },
-    { label: "Save post",         onClick: handleSave,   hidden: isOwnPost  },
-    { label: "Bookmark",          onClick: () => {},     hidden: isOwnPost  },
+    { 
+      label: post?.isBookmarked ? "Remove from bookmarks" : "Bookmark",
+      onClick: handleBookmark,
+      variant: post?.isBookmarked ? "destructive" : "primary"
+    },
     { type:  "separator" },
     { label: "Hide post",         onClick: () => {},     hidden: isOwnPost  },
     {
@@ -356,7 +376,7 @@ const FeedPost = ({ post }) => {
     { label: "Copy link",  onClick: handleCopy  },
     { label: "Share post", onClick: handleShare },
     { type:  "separator",  hidden: isOwnPost    },
-  ], [isOwnPost, handleEdit, handleDelete, handleSave, handleCopy, handleShare, handleReport, isFollowing, handleFollowToggle]);
+  ], [isOwnPost, handleEdit, handleDelete, handleCopy, handleShare, handleReport, isFollowing, handleFollowToggle, post?.isBookmarked, handleBookmark]);
 
   return (
     <>

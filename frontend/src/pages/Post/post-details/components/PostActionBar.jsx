@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/tooltip';
 import { useDislikePostMutation, useLikePostMutation } from '@/features/Like/api/likeApi.js';
 import { toast } from 'sonner';
+import { useCreateBookmarkMutation, useDeleteBookmarkMutation } from '@/features/bookmark/api/bookmarkApi.js';
 
 const ActionButton = ({ icon: Icon, label, onClick, active, activeClass, hoverClass, filled }) => (
   <Tooltip>
@@ -55,13 +56,24 @@ const PostActionBar = ({ post, onShareCopied }) => {
     [post.isLiked, handleLike, handleDislike]
   );
 
-  const handleSave = useCallback(() => {
-    const saved = post.hasSaved;
-    // updatePost({
-    //   id: post._id,
-    //   hasSaved: !saved,
-    // });
-  }, [post]);
+  const [createBookmark] = useCreateBookmarkMutation();
+  const [deleteBookmark] = useDeleteBookmarkMutation();
+
+  const handleBookmark = useCallback(async () => {
+    try {
+      const postId = post?._id;
+      if (!postId) return;
+      if(post?.isBookmarked) {
+        await deleteBookmark(postId).unwrap();
+        toast.success("Post is removed from bookmarks.");
+      } else {
+        await createBookmark(postId).unwrap();
+        toast.success("Post added to bookmarks.");
+      }
+    } catch (error) {
+      toast.error(error?.data?.message ?? "Something went wrong.");
+    }
+  }, [post, createBookmark, deleteBookmark]);
 
   const handleShare = useCallback(async () => {
     const url = window.location.href;
@@ -111,9 +123,9 @@ const PostActionBar = ({ post, onShareCopied }) => {
         </div>
         <ActionButton
           icon={Bookmark}
-          label={post.hasSaved? "Unsave" : "Save"}
-          onClick={handleSave}
-          active={post.hasSaved}
+          label={post.isBookmarked ? "Remove bookmark" : "Bookmark"}
+          onClick={handleBookmark}
+          active={post.isBookmarked}
           activeClass="text-indigo-400 bg-indigo-500/10 hover:bg-indigo-500/20"
           hoverClass="hover:bg-indigo-500/10 hover:text-indigo-400"
           filled
