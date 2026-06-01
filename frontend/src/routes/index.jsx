@@ -19,6 +19,7 @@ import PostDetailPage from "@/pages/Post/post-details/PostDetails.jsx";
 import GlobalErrorPage from "@/pages/Error/GlobalErrorPage.jsx";
 import NotFoundPage from "@/pages/Error/NotFoundPage.jsx";
 import SettingsPage from "@/pages/Settings/Settings.jsx";
+import BookmarksPage from "@/pages/Bookmark/BookmarksPage.jsx";
 
 const router = createBrowserRouter([
   // Authenticaion
@@ -90,6 +91,10 @@ const router = createBrowserRouter([
               {
                 path: "settings",
                 element: <SettingsPage />
+              },
+              {
+                path: "bookmarks",
+                element: <BookmarksPage />
               },
               {
                 path: "*",
