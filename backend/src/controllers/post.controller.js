@@ -142,13 +142,34 @@ export const getPostById = asyncHandler(async (req, res) => {
       }
     },
     {
+      $lookup: {
+        from: 'bookmarks',
+        let: { targetPostId: "$_id"},
+        pipeline: [
+          {
+            $match: { 
+              $expr: {
+                $and: [
+                  { $eq: ["$post", "$$targetPostId"] },
+                  { $eq: ["$owner", new mongoose.Types.ObjectId(userId)] }
+                ]
+              }
+            }
+          }
+        ],
+        as: "userBookmarkStatus"   
+      }
+    },
+    {
       $addFields: {
-        isLiked: { $gt: [{ $size: "$userLikeStatus"}, 0] }
+        isLiked: { $gt: [{ $size: "$userLikeStatus"}, 0] },
+        isBookmarked: { $gt: [{ $size: "$userBookmarkStatus"}, 0] }
       }
     },
     {
       $project: {
-        userLikeStatus: 0
+        userLikeStatus: 0,
+        userBookmarkStatus: 0
       }
     },
     {
@@ -272,15 +293,36 @@ export const getPosts = asyncHandler(async (req, res) => {
         }
       },
       {
-        $addFields: {
-          isLiked: { $gt: [{ $size: '$userLike' }, 0] }
+        $lookup: {
+          from: 'bookmarks',
+          let: { postId: '$_id' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$post', '$$postId'] },
+                    { $eq: ['$owner', currentUserId] }
+                  ]
+                }
+              }
+            },
+            { $project: { _id: 1 } }
+          ],
+          as: 'userBookmark'
         }
       },
-      { $project: { userLike: 0 } }
+      {
+        $addFields: {
+          isLiked: { $gt: [{ $size: '$userLike' }, 0] },
+          isBookmarked: { $gt: [{ $size: '$userBookmark' }, 0] }
+        }
+      },
+      { $project: { userLike: 0, userBookmark: 0 } }
     );
   } else {
     pipeline.push({
-      $addFields: { isLiked: false }
+      $addFields: { isLiked: false, isBookmarked: false }
     });
   }
 
@@ -410,13 +452,35 @@ export const getUserPosts = asyncHandler(async (req, res) => {
     },
 
     {
+      $lookup: {
+        from: "bookmarks",
+        let: { postId: "$_id" },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $eq: ["$post", "$$postId"] },
+                  { $eq: ["$owner", new mongoose.Types.ObjectId(currentUserId)] }
+                ]
+              }
+            }
+          },
+          { $project: { _id: 1 } }
+        ],
+        as: "userBookmark"
+      }
+    },
+    {
       $addFields: {
         isLiked: { $gt: [{ $size: "$userLike" }, 0] },
+        isBookmarked: { $gt: [{ $size: "$userBookmark" }, 0] }
       }
     },
     { 
       $project: { 
-        userLike: 0 
+        userLike: 0,
+        userBookmark: 0
       } 
     }
   ]);
