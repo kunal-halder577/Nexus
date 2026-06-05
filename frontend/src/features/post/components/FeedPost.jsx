@@ -257,6 +257,7 @@ const FeedPost = ({ post }) => {
   } = useEditPost(post);
 
   const isOwnPost = currentUser._id === post.author?._id;
+  const isPrivilaged = currentUser.role === "admin" || currentUser.role === "moderator";
   const authorId  = post.author?._id;
 
   const libItems = useMemo(
@@ -354,8 +355,8 @@ const FeedPost = ({ post }) => {
   const authorInitial = post.author?.name?.[0]?.toUpperCase() ?? "?";
 
   const menuActions = useMemo(() => [
-    { label: "Edit post",         onClick: handleEdit,   hidden: !isOwnPost },
-    { label: "Delete post",       onClick: handleDelete, variant: "destructive", hidden: !isOwnPost },
+    { label: "Edit post",         onClick: handleEdit,   hidden: !isOwnPost && !isPrivilaged },
+    { label: "Delete post",       onClick: handleDelete, variant: "destructive", hidden: !isOwnPost && !isPrivilaged },
     { label: "Report post",       onClick: handleReport, variant: "destructive", hidden: isOwnPost  },
     { label: "Block user",        onClick: () => {},     variant: "warning",     hidden: isOwnPost  },
     { type:  "separator",                                hidden: !isOwnPost },
@@ -376,7 +377,7 @@ const FeedPost = ({ post }) => {
     { label: "Copy link",  onClick: handleCopy  },
     { label: "Share post", onClick: handleShare },
     { type:  "separator",  hidden: isOwnPost    },
-  ], [isOwnPost, handleEdit, handleDelete, handleCopy, handleShare, handleReport, isFollowing, handleFollowToggle, post?.isBookmarked, handleBookmark]);
+  ], [isOwnPost, isPrivilaged, handleEdit, handleDelete, handleCopy, handleShare, handleReport, isFollowing, handleFollowToggle, post?.isBookmarked, handleBookmark]);
 
   return (
     <>

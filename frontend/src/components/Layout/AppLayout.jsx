@@ -11,8 +11,8 @@ export default function AppLayout() {
   const location = useLocation();
 
   // Hide the bottom navigation bar on all post-related pages 
-  // (e.g., /post/create, /post/:id) for a more immersive experience.
-  const showBtmNav = !location.pathname.startsWith("/post/");
+  // (e.g., /post/create, /post/:id) and the admin dashboard for a more immersive experience.
+  const showBtmNav = !location.pathname.startsWith("/post/") && !location.pathname.startsWith("/admin");
 
   return (
     <SidebarProvider>
