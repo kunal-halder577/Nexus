@@ -7,6 +7,9 @@ import asyncHandler from "../utils/asyncHandler.js"
 import { deleteMultipleMedia, uploadMultipleMedia } from "../utils/cloudinary.js";
 import User from "../models/user.model.js";
 import redis from "../cache/redisConfig.js";
+import AuditLog from "../models/AuditLog.model.js";
+
+const isOwner = (resourceOwnerId, currentUserId) => resourceOwnerId.equals(currentUserId);
 
 export const createPost = asyncHandler(async (req, res) => {
   const userId = req.user._id;
@@ -539,7 +542,8 @@ export const updatePost = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { caption } = req.body;
   const userId = req.user._id;
-
+  const isPrivilaged = req.user.isPrivilaged;
+  
   if(!id) throw new ApiError(400, "Post id is required.");
   
   if(!caption || !caption.trim()) {
@@ -554,12 +558,21 @@ export const updatePost = asyncHandler(async (req, res) => {
 
   if(!post) throw new ApiError(404, "Post not found.");
 
-  if(userId.toString() !== post.author.toString()) {
+  if(!isOwner(post.author, userId) && !isPrivilaged) {
     throw new ApiError(403, "You're not allowed to update the post.");
   }
 
   post.content = { caption: caption.trim() };
   await post.save();
+
+  if(isPrivilaged) {
+    await AuditLog.create({
+      actor: userId,
+      action: "EDIT_POST",
+      target: id,
+      targetModel: "Post",
+    });
+  }
 
   const response = {
     _id: post._id,
@@ -575,6 +588,7 @@ export const updatePost = asyncHandler(async (req, res) => {
 export const deletePost = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const userId = req.user._id;
+  const isPrivilaged = req.user.isPrivilaged;
 
   if (!id) throw new ApiError(400, "Post id is required.");
   if (!mongoose.Types.ObjectId.isValid(id)) throw new ApiError(400, "Invalid post id.");
@@ -582,7 +596,7 @@ export const deletePost = asyncHandler(async (req, res) => {
   const post = await Post.findById(id);
 
   if (!post) throw new ApiError(404, "Post not found.");
-  if (post.author.toString() !== userId.toString()) {
+  if (!isOwner(post.author, userId) && !isPrivilaged) {
     throw new ApiError(403, "You're not allowed to delete this post.");
   }
 
@@ -592,11 +606,19 @@ export const deletePost = asyncHandler(async (req, res) => {
   // ✅ 2. Clean up Cloudinary after — pass full objects so resourceType is respected
   if (post.media?.length > 0) {
     await deleteMultipleMedia(post.media).catch(err =>
-      // Don't throw — post is already deleted, just log for manual cleanup
       console.error("Failed to delete post media from cloud:", err)
     );
   }
 
+  if(isPrivilaged) {
+    await AuditLog.create({
+      actor: userId,
+      action: "DELETE_POST",
+      target: id,
+      targetModel: "Post",
+    });
+  }
+  
   return res
     .status(200)
     .json(new ApiResponse(200, "Post deleted successfully.", {}));

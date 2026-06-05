@@ -60,7 +60,7 @@ export const register = asyncHandler(async (req, res) => {
   await user.save();
 
   const createdUser = await User.findById(user._id).select(
-    "_id username email createdAt isOnboarded"
+    "_id username email createdAt isOnboarded role"
   );
 
   const response = {
@@ -141,6 +141,7 @@ export const login = asyncHandler(async (req, res) => {
       isOnboarded: user.isOnboarded,
       avatarPublicId: user.avatarPublicId,
       createdAt: user.createdAt,
+      role: user.role,
     },
     accessToken
   }
