@@ -187,6 +187,7 @@ const CommentActions = ({
   onEdit,
   onDelete,
   isOwn,
+  isPrivilaged,
   canReply = true,
   size = 'sm',
 }) => {
@@ -217,7 +218,7 @@ const CommentActions = ({
       )}
       
       {/* Edit (own) */}
-      {isOwn && (
+      {(isOwn || isPrivilaged) && (
         <button
           type="button"
           onClick={onEdit}
@@ -229,7 +230,7 @@ const CommentActions = ({
       )}
 
       {/* Delete (own) */}
-      {isOwn && (
+      {(isOwn || isPrivilaged) && (
         <button
           type="button"
           onClick={onDelete}
@@ -256,6 +257,7 @@ const CommentBubble = ({ comment, postId, depth = 0, avatarSize = 'md' }) => {
   const [updateComment, { isLoading: isUpdating }] = useUpdateCommentMutation();
 
   const isOwn     = currentUser?._id === (comment.author?._id ?? comment.author);
+  const isPrivilaged = currentUser?.role === 'admin' || currentUser?.role === 'moderator';
   const canReply  = depth < 2;  // max depth is 2
 
   const handleDelete = useCallback(async () => {
@@ -386,6 +388,7 @@ const CommentBubble = ({ comment, postId, depth = 0, avatarSize = 'md' }) => {
                   onEdit={() => setIsEditing(true)}
                   onDelete={handleDelete}
                   isOwn={isOwn}
+                  isPrivilaged={isPrivilaged}
                   canReply={canReply}
                 />
               )}

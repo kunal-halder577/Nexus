@@ -20,6 +20,8 @@ import GlobalErrorPage from "@/pages/Error/GlobalErrorPage.jsx";
 import NotFoundPage from "@/pages/Error/NotFoundPage.jsx";
 import SettingsPage from "@/pages/Settings/Settings.jsx";
 import BookmarksPage from "@/pages/Bookmark/BookmarksPage.jsx";
+import AdminPage from "@/pages/Admin/AdminPage.jsx";
+import AdminRoute from "@/pages/Auth/AdminRoute.jsx";
 
 const router = createBrowserRouter([
   // Authenticaion
@@ -95,6 +97,15 @@ const router = createBrowserRouter([
               {
                 path: "bookmarks",
                 element: <BookmarksPage />
+              },
+              {
+                element: <AdminRoute />,
+                children: [
+                  {
+                    path: "admin",
+                    element: <AdminPage />
+                  }
+                ]
               },
               {
                 path: "*",
