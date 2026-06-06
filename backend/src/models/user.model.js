@@ -149,6 +149,7 @@ userSchema.set('toJSON', {
   transform(doc, ret) {
     return {
       _id: ret._id,
+      role: ret.role,
       age: ret.age,
       name: ret.name,
       email: ret.email,
