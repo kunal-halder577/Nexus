@@ -20,6 +20,20 @@ const patchAllUserFeeds = (dispatch, getState, postId, updater) => {
     );
 };
 
+const patchAllBookmarksFeeds = (dispatch, getState, updater) => {
+  const queries = getState()[baseApi.reducerPath].queries;
+
+  return Object.values(queries)
+    .filter((e) => e?.endpointName === "getUserBookmarks" && e?.status === "fulfilled")
+    .map((e) =>
+      dispatch(
+        baseApi.util.updateQueryData("getUserBookmarks", e.originalArgs, (draft) => {
+          updater(draft);
+        })
+      )
+    );
+};
+
 const patchPostInFeed = (dispatch, postId, updater) =>
   dispatch(
     postApi.util.updateQueryData("getFeedPosts", undefined, (draft) => {
@@ -111,7 +125,14 @@ export const postApi = baseApi.injectEndpoints({
       // Removed invalidatesTags to prevent infinite query reset to page 1
       // Optimistic updates (below) already handle syncing the cache
       async onQueryStarted({ id, ...patch }, { dispatch, getState, queryFulfilled }) {
-        const postUpdater = (post) => Object.assign(post, patch);
+        const postUpdater = (post) => {
+          if (patch.caption !== undefined) {
+            if (!post.content) post.content = {};
+            post.content.caption = patch.caption;
+          }
+          const { caption, ...rest } = patch;
+          Object.assign(post, rest);
+        };
         const draftUpdater = (draft) => {
           for (const page of draft.pages) {
             const post = page.data?.data?.find((p) => p._id === id);
@@ -119,15 +140,17 @@ export const postApi = baseApi.injectEndpoints({
           }
         };
 
-        const feedPatch      = patchPostInFeed(dispatch, id, postUpdater);
-        const userFeedPatch  = patchAllUserFeeds(dispatch, getState, id, draftUpdater);
-        const detailPatch    = patchPostById(dispatch, id, postUpdater);
+        const feedPatch       = patchPostInFeed(dispatch, id, postUpdater);
+        const userFeedPatch   = patchAllUserFeeds(dispatch, getState, id, draftUpdater);
+        const bookmarkPatch   = patchAllBookmarksFeeds(dispatch, getState, draftUpdater);
+        const detailPatch     = patchPostById(dispatch, id, postUpdater);
 
         try {
           await queryFulfilled;
         } catch {
           feedPatch.undo();
           userFeedPatch.forEach((p) => p.undo());
+          bookmarkPatch.forEach((p) => p.undo());
           detailPatch.undo();
         }
       },
@@ -155,12 +178,14 @@ export const postApi = baseApi.injectEndpoints({
           postApi.util.updateQueryData("getFeedPosts", undefined, draftRemover)
         );
         const userFeedPatch = patchAllUserFeeds(dispatch, getState, id, draftRemover);
+        const bookmarkPatch = patchAllBookmarksFeeds(dispatch, getState, draftRemover);
 
         try {
           await queryFulfilled;
         } catch {
           feedPatch.undo();
           userFeedPatch.forEach((p) => p.undo());
+          bookmarkPatch.forEach((p) => p.undo());
         }
       },
     }),
