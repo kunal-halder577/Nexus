@@ -39,6 +39,7 @@ export const userApi = baseApi.injectEndpoints({
         method: 'GET'
       }),
       transformResponse: (response) => response.data,
+      providesTags: (result, error, id) => [{ type: 'User', id }],
     }),
     searchUsers: builder.query({
       query: (searchArgs) => ({

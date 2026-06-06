@@ -6,6 +6,9 @@ import Post from "../models/post.model.js";
 import Like from "../models/like.model.js";
 import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
+import AuditLog from "../models/AuditLog.model.js";
+
+const isOwner = (resourceOwnerId, currentUserId) => resourceOwnerId.equals(currentUserId);
 
 export const createComment = asyncHandler(async (req, res) => {
     const { content, postId, parentId, idempotentKey } = req.body;
@@ -146,7 +149,8 @@ export const updateComment = asyncHandler(async (req, res) => {
     const { commentId } = req.params;
     const { newContent } = req.body;
     const userId = req.user._id;
-    
+    const isPrivilaged = req.user.isPrivilaged;
+
     if(!commentId || !mongoose.isValidObjectId(commentId)) {
         throw new ApiError(400, "Comment id is required.");
     }
@@ -158,11 +162,20 @@ export const updateComment = asyncHandler(async (req, res) => {
     .select('author content deletedAt postId parentId');
 
     if(!comment || comment.deletedAt) throw new ApiError(404, 'Comment not found.');
-    if(!comment.author.equals(userId)) throw new ApiError(403, 'Unauthorized request.');
+    if(!isOwner(comment.author, userId) && !isPrivilaged) throw new ApiError(403, 'Unauthorized request.');
 
     comment.content.text = newContent.trim();
     await comment.save();
     
+    if(isPrivilaged) {
+        await AuditLog.create({
+            actor: userId,
+            action: "EDIT_COMMENT",
+            target: commentId,
+            targetModel: "Comment",
+        });
+    }
+
     return res
     .status(200)
     .json(new ApiResponse(200, 'Comment updated successfully.', comment));
@@ -170,18 +183,28 @@ export const updateComment = asyncHandler(async (req, res) => {
 export const deleteComment = asyncHandler(async (req, res) => {
     const { commentId } = req.params;
     const userId = req.user._id;
-
+    const isPrivilaged = req.user.isPrivilaged;
+    
     if(!commentId || !mongoose.isValidObjectId(commentId)) {
         throw new ApiError(400, "Comment id is required.");
     }
     
     const comment = await Comment.findById(commentId).select('author deletedAt content postId parentId stats');
     if(!comment || comment.deletedAt) throw new ApiError(404, 'Comment not found.');
-    if(!comment.author.equals(userId)) throw new ApiError(403, 'Unauthorized request.');
+    if(!isOwner(comment.author, userId) && !isPrivilaged) throw new ApiError(403, 'Unauthorized request.');
 
     comment.deletedAt = new Date();
     comment.content.text = '[deleted]';
     await comment.save();
+
+    if(isPrivilaged) {
+        await AuditLog.create({
+            actor: userId,
+            action: "DELETE_COMMENT",
+            target: commentId,
+            targetModel: "Comment",
+        });
+    }
 
     await Post.updateOne({ _id: comment.postId }, { $inc: { 'stats.commentCount': -1 } });
 

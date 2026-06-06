@@ -33,6 +33,7 @@ import { toast } from 'sonner';
 import FollowersModal from './FollowersModal.jsx';
 import AvatarLightbox from './AvatarLightbox.jsx';
 import UserNotFound from '../Error/UserNotFoundPage.jsx';
+import AdminEditProfileDialog from '../Admin/components/AdminEditProfileDialog.jsx';
 
 // ─── Stat button — accessible, no layout shift on label change ────────────────
 function StatButton({ count, label, onClick }) {
@@ -99,6 +100,7 @@ export default function OtherUserProfile() {
   const { id } = useParams();
   const [activeTab, setActiveTab]     = useState('posts');
   const [avatarOpen, setAvatarOpen]   = useState(false);
+  const [adminEditModalOpen, setAdminEditModalOpen] = useState(false);
   const [followModal, setFollowModal] = useState(null); // null | 'followers' | 'following'
   const [isJustFollowed, setIsJustFollowed] = useState(false);
   const [followParticles, setFollowParticles] = useState([]);
@@ -278,6 +280,15 @@ export default function OtherUserProfile() {
                   </>
                 ) : (
                   <>
+                    {currentUser?.role === 'admin' && user?.role !== 'admin' && (
+                      <Button
+                        variant="outline"
+                        className="flex-1 sm:flex-none border-indigo-500/50 text-indigo-500 hover:bg-indigo-50 cursor-pointer"
+                        onClick={() => setAdminEditModalOpen(true)}
+                      >
+                        Edit User
+                      </Button>
+                    )}
                     {/*
                       ── Follow / Unfollow button ──────────────────────────────
                       Fixed w-32 with three absolute label layers — no reflow.
@@ -510,6 +521,14 @@ export default function OtherUserProfile() {
           </div>
         </div>
       </main>
+
+      {adminEditModalOpen && (
+        <AdminEditProfileDialog
+          isOpen={adminEditModalOpen}
+          userId={user._id}
+          onClose={() => setAdminEditModalOpen(false)}
+        />
+      )}
     </div>
   );
 }
